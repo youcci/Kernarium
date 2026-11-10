@@ -78,6 +78,16 @@ uml_add_unit_test(NAME kernarium-guest-time-zone
     COMMAND uml_kernarium_guest_time_zone_tests
     LABELS kernarium)
 
+# What the host's screen hides of an Android guest's display, as the runtime
+# states it on the kernel command line.
+add_executable(uml_kernarium_guest_display_shape_tests
+    guest_display_shape_tests.cpp)
+target_include_directories(uml_kernarium_guest_display_shape_tests PRIVATE
+    ${PROJECT_SOURCE_DIR}/Kernarium/Runtime)
+uml_add_unit_test(NAME kernarium-guest-display-shape
+    COMMAND uml_kernarium_guest_display_shape_tests
+    LABELS kernarium)
+
 # How a statistics reading is composed from the emulator's and the display's
 # figures, and when the guest's memory may be asked for.
 add_executable(uml_kernarium_statistics_tests statistics_tests.cpp)

@@ -9,6 +9,10 @@ import UIKit
 struct GuestDisplayGeometry {
     let pixelSize: CGSize
     let dotsPerInch: UInt32
+    /// How far the display's top edge reaches above the screen's safe area,
+    /// in points: what a notch or an island can hide of it. Zero for a display
+    /// laid out inside the safe area.
+    var topInset: CGFloat = 0
 }
 
 struct GuestDisplayView: UIViewControllerRepresentable {
@@ -138,15 +142,15 @@ final class GuestMetalView: MTKView, UIKeyInput {
     @objc private(set) var umlGuestResizeInProgress = false
     private var touchContacts = GuestTouchContacts<ObjectIdentifier>()
     private var guestContentSize: CGSize?
-
-    override var canBecomeFirstResponder: Bool { true }
-    // While the guest has the keyboard focus, three fingers are the guest's
-    // touches, not UIKit's undo, redo, copy and paste gestures.
     /// Asks the screen for its full refresh rate while guest frames arrive: a
     /// ProMotion screen shows a layer nothing votes for at 60 Hz. It pauses
     /// when the frames stop, so an idle display can slow down again.
     private var frameRateVote: CADisplayLink?
     private var lastGuestFrame = CFTimeInterval(0)
+
+    override var canBecomeFirstResponder: Bool { true }
+    // While the guest has the keyboard focus, three fingers are the guest's
+    // touches, not UIKit's undo, redo, copy and paste gestures.
     override var editingInteractionConfiguration: UIEditingInteractionConfiguration { .none }
     var hasText: Bool { true }
     var keyboardType: UIKeyboardType = .asciiCapable
@@ -162,13 +166,13 @@ final class GuestMetalView: MTKView, UIKeyInput {
     }
 
     func reportLayout() {
-        guard let screen = window?.screen else { return }
-        let scale = retinaMode ? screen.nativeScale : 1
+        guard let window else { return }
+        let scale = retinaMode ? window.screen.nativeScale : 1
         guard bounds.width > 0, bounds.height > 0,
               scale.isFinite, scale > 0 else { return }
-        // SwiftUI supplies safe-area-excluded point bounds. Point-resolution
-        // mode maps them directly to guest pixels; Retina mode converts them
-        // to physical backing pixels, including fractional native scales.
+        // SwiftUI supplies point bounds. Point-resolution mode maps them
+        // directly to guest pixels; Retina mode converts them to physical
+        // backing pixels, including fractional native scales.
         let pixelSize = CGSize(
             width: (bounds.width * scale).rounded(.down),
             height: (bounds.height * scale).rounded(.down)
@@ -182,7 +186,8 @@ final class GuestMetalView: MTKView, UIKeyInput {
             self,
             GuestDisplayGeometry(
                 pixelSize: pixelSize,
-                dotsPerInch: dotsPerInch
+                dotsPerInch: dotsPerInch,
+                topInset: max(0, window.safeAreaInsets.top - convert(bounds, to: window).minY)
             )
         )
     }

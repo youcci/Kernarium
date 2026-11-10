@@ -827,6 +827,7 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                           flip_variant: str | None = None,
                           reclaim_variant: str | None = None,
                           time_zone_variant: str | None = None,
+                          display_shape_variant: str | None = None,
                           wallpaper_variant: str | None = None,
                           thermal_hal_variant: str | None = None,
                           cas_hal_variant: str | None = None,
@@ -1456,6 +1457,36 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                         time_zone_rc = time_zone_rc.replace(old, new)
                 if time_zone_variant != "missing-rc":
                     archive.writestr("SYSTEM_EXT/etc/init/kernarium_time_zone.rc", time_zone_rc)
+                # The script that applies the shape of the host's screen, with its init file.
+                display_shape_script = (
+                    verifier.parents[1] / "overlay/tools/kernarium_display_shape.sh"
+                ).read_text()
+                display_shape_rc = (
+                    verifier.parents[1] / "overlay/tools/kernarium_display_shape.rc"
+                ).read_text()
+                for variant, (old, new) in {
+                    "no-property": ("getprop ro.boot.kernarium.display_shape",
+                                    "getprop ro.boot.other"),
+                    "no-cutout": ("android:string/config_mainBuiltInDisplayCutout",
+                                  "android:string/other"),
+                    "no-marker": ('setprop "$marker" "$shape"', "true"),
+                }.items():
+                    if display_shape_variant == variant:
+                        if old not in display_shape_script:
+                            fail(f"the display shape script lacks '{old}' for the {variant} variant")
+                        display_shape_script = display_shape_script.replace(old, new)
+                if display_shape_variant != "missing-script":
+                    archive.writestr(
+                        "SYSTEM_EXT/bin/kernarium_display_shape.sh", display_shape_script
+                    )
+                if display_shape_variant == "started-at-boot":
+                    display_shape_rc = display_shape_rc.replace(
+                        "on property:sys.boot_completed=1", "on boot"
+                    )
+                if display_shape_variant != "missing-rc":
+                    archive.writestr(
+                        "SYSTEM_EXT/etc/init/kernarium_display_shape.rc", display_shape_rc
+                    )
                 archive.writestr(
                     "SYSTEM_EXT/etc/selinux/system_ext_file_contexts",
                     "/(system_ext|system/system_ext)/bin/other\\.sh  u:object_r:system_file:s0\n"
@@ -1476,6 +1507,12 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                         if time_zone_variant == "missing-label"
                         else "/(system_ext|system/system_ext)/bin/kernarium_time_zone\\.sh  "
                         "u:object_r:kernarium_time_zone_exec:s0\n"
+                    )
+                    + (
+                        ""
+                        if display_shape_variant == "missing-label"
+                        else "/(system_ext|system/system_ext)/bin/kernarium_display_shape\\.sh  "
+                        "u:object_r:kernarium_display_shape_exec:s0\n"
                     ),
                 )
                 # Platform, vendor and system_ext policy as the builder emits them: the
@@ -1564,6 +1601,12 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                         if time_zone_variant == "missing-marker-context"
                         else "persist.sys.kernarium.timezone_applied    "
                         "u:object_r:kernarium_time_zone_prop:s0 exact string\n"
+                    )
+                    + (
+                        ""
+                        if display_shape_variant == "missing-marker-context"
+                        else "persist.sys.kernarium.display_shape_applied    "
+                        "u:object_r:kernarium_display_shape_prop:s0 exact string\n"
                     ),
                 )
                 archive.writestr(
@@ -1616,6 +1659,8 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                        else "kernarium_wifi_network_prop ")
                     + ("" if time_zone_variant == "marker-not-system"
                        else "kernarium_time_zone_prop ")
+                    + ("" if display_shape_variant == "marker-not-system"
+                       else "kernarium_display_shape_prop ")
                     + "))\n"
                     + (
                         ""
@@ -1694,6 +1739,28 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                         "(allow kernarium_time_zone timezone_prop (property_service (set)))\n"
                         if time_zone_variant == "sets-zone-property"
                         else ""
+                    )
+                    + "".join(
+                        rule
+                        for variant, rule in (
+                            ("missing-transition",
+                             "(typetransition init kernarium_display_shape_exec process "
+                             "kernarium_display_shape)\n"),
+                            ("missing-overlay-find",
+                             "(allow kernarium_display_shape overlay_service "
+                             "(service_manager (find)))\n"),
+                            ("missing-transfer",
+                             "(allow kernarium_display_shape system_server "
+                             "(binder (transfer)))\n"),
+                            ("missing-call",
+                             "(allow system_server kernarium_display_shape (binder (call)))\n"),
+                            ("missing-fd",
+                             "(allow system_server kernarium_display_shape (fd (use)))\n"),
+                            ("missing-marker-rule",
+                             "(allow kernarium_display_shape kernarium_display_shape_prop "
+                             "(property_service (set)))\n"),
+                        )
+                        if display_shape_variant != variant
                     )
                     + (
                         ""
@@ -3104,6 +3171,24 @@ def verify_target_files_fixtures(verifier: Path) -> None:
             ("reclaim-missing-call", {"reclaim_variant": "missing-call"}),
             ("reclaim-missing-fd", {"reclaim_variant": "missing-fd"}),
             ("reclaim-missing-fifo", {"reclaim_variant": "missing-fifo"}),
+            ("missing-display-shape-script", {"display_shape_variant": "missing-script"}),
+            ("missing-display-shape-rc", {"display_shape_variant": "missing-rc"}),
+            ("display-shape-started-at-boot", {"display_shape_variant": "started-at-boot"}),
+            ("display-shape-no-property", {"display_shape_variant": "no-property"}),
+            ("display-shape-no-cutout", {"display_shape_variant": "no-cutout"}),
+            ("display-shape-no-marker", {"display_shape_variant": "no-marker"}),
+            ("display-shape-missing-label", {"display_shape_variant": "missing-label"}),
+            ("display-shape-missing-transition", {"display_shape_variant": "missing-transition"}),
+            ("display-shape-missing-overlay-find",
+             {"display_shape_variant": "missing-overlay-find"}),
+            ("display-shape-missing-transfer", {"display_shape_variant": "missing-transfer"}),
+            ("display-shape-missing-call", {"display_shape_variant": "missing-call"}),
+            ("display-shape-missing-fd", {"display_shape_variant": "missing-fd"}),
+            ("display-shape-missing-marker-rule",
+             {"display_shape_variant": "missing-marker-rule"}),
+            ("display-shape-marker-not-system", {"display_shape_variant": "marker-not-system"}),
+            ("display-shape-missing-marker-context",
+             {"display_shape_variant": "missing-marker-context"}),
             ("missing-time-zone-script", {"time_zone_variant": "missing-script"}),
             ("missing-time-zone-rc", {"time_zone_variant": "missing-rc"}),
             ("time-zone-missing-service", {"time_zone_variant": "missing-service"}),
@@ -3964,6 +4049,20 @@ def verify_target_files_fixtures(verifier: Path) -> None:
              "does not allow system_server kernarium_reclaim_boot_apps fd use"),
             ("reclaim-missing-fifo-cause", {"reclaim_variant": "missing-fifo"},
              "does not allow system_server kernarium_reclaim_boot_apps fifo_file write"),
+            ("missing-display-shape-script-cause", {"display_shape_variant": "missing-script"},
+             "required entries are missing: .*SYSTEM_EXT/bin/kernarium_display_shape.sh"),
+            ("display-shape-started-at-boot-cause", {"display_shape_variant": "started-at-boot"},
+             "starts kernarium_display_shape under 'boot'"),
+            ("display-shape-no-cutout-cause", {"display_shape_variant": "no-cutout"},
+             "does not contain 'android:string/config_mainBuiltInDisplayCutout'"),
+            ("display-shape-missing-label-cause", {"display_shape_variant": "missing-label"},
+             "do not label /system_ext/bin/kernarium_display_shape.sh"),
+            ("display-shape-missing-overlay-find-cause",
+             {"display_shape_variant": "missing-overlay-find"},
+             "does not allow kernarium_display_shape overlay_service service_manager find"),
+            ("display-shape-missing-marker-rule-cause",
+             {"display_shape_variant": "missing-marker-rule"},
+             "lets the display shape domain set \\[\\], not only its own marker"),
             ("missing-time-zone-script-cause", {"time_zone_variant": "missing-script"},
              "required entries are missing: .*SYSTEM_EXT/bin/kernarium_time_zone.sh"),
             ("missing-time-zone-rc-cause", {"time_zone_variant": "missing-rc"},

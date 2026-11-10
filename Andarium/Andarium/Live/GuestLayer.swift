@@ -29,10 +29,24 @@ struct GuestLayer: View {
                 // guest's status bar; the system knows where they are. A
                 // scene that covers the screen has none.
                 .containerCornerOffset(SceneCoverage.cornerOffsetEdges(coversScreen: coversScreen), sizeToFit: true)
+                .ignoresSafeArea(.container, edges: fillsScreen ? .all : [])
             }
             .background {
                 SceneCoverageReader { coversScreen = $0 }
             }
+        }
+    }
+
+    /// Whether the display runs edge to edge. An iPhone's scene always covers
+    /// its screen, and Android is told what the screen hides
+    /// (`GuestDisplayShape`). Recovery draws a screen of its own that knows
+    /// no cutout, and an iPad's scene can become a window during a run, which
+    /// a shape stated at boot would not follow: both keep to the safe area.
+    private var fillsScreen: Bool {
+        guard UIDevice.current.userInterfaceIdiom == .phone else { return false }
+        switch model.phase {
+        case .booting(.recovery), .running(.recovery): return false
+        case .home, .booting, .running, .failed: return true
         }
     }
 

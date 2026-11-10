@@ -239,6 +239,12 @@ requires reopening Andarium.
 - **Retina.** Retina mode applies at the next start and uses the screen's
   native pixels, whose host allocations count against the same iOS process
   limit as guest RAM (`DisplayOptions`).
+- **Display shape.** On an iPhone the guest's display fills the screen, and
+  every start states the notch or island and the corners' radius
+  (`GuestDisplayShape`, the boot request's `android_display_*` fields), which
+  the system image makes Android's
+  [display cutout and corners](../android/lineage-24/README.md#display-shape).
+  Recovery, and every display on an iPad, keep to the safe area.
 - **Motion.** Gyroscope needs no permission. The host reads a sensor only while
   a guest application uses it and sends samples over private vsock port 5556;
   the system image must include the

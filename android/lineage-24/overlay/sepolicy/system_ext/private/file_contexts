@@ -7,3 +7,6 @@
 
 # Applies the host's time zone once the system is up.
 /(system_ext|system/system_ext)/bin/kernarium_time_zone\.sh  u:object_r:kernarium_time_zone_exec:s0
+
+# Applies the shape of the host's screen once the system is up.
+/(system_ext|system/system_ext)/bin/kernarium_display_shape\.sh  u:object_r:kernarium_display_shape_exec:s0

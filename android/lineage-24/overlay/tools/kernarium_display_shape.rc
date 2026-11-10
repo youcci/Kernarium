@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+# Applies the shape of the host's screen once the system is up
+# (kernarium_display_shape.sh).
+service kernarium_display_shape /system_ext/bin/kernarium_display_shape.sh
+    user root
+    group shell
+    oneshot
+    disabled
+
+on property:sys.boot_completed=1
+    start kernarium_display_shape

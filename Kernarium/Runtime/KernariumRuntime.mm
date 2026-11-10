@@ -4,6 +4,7 @@
 #include "KernariumAdbChannel.hpp"
 #include "KernariumConsoleInput.hpp"
 #include "KernariumConsoleOutput.hpp"
+#include "KernariumGuestDisplayShape.hpp"
 #include "KernariumGuestTimeZone.hpp"
 #include "KernariumKeyWake.hpp"
 #include "KernariumRestartLoop.hpp"
@@ -881,7 +882,8 @@ void appendKernelCommandLine(
     uint32_t dotsPerInch,
     uint32_t guestProcessorCount,
     std::string_view adbPublicKey,
-    std::string_view timeZone)
+    std::string_view timeZone,
+    std::string_view displayShape)
 {
     const auto path = storage.release() / uml::android::releaseCommandLine;
     constexpr std::string_view adbAuthorizationPrefix {
@@ -892,7 +894,8 @@ void appendKernelCommandLine(
         adbAuthorizationPrefix,
         kernarium::adb::keyPrefix,
         kernarium::adb::tcpPrefix,
-        kernarium::timezone::prefix};
+        kernarium::timezone::prefix,
+        kernarium::display_shape::prefix};
     for (auto& argument :
          uml::android::readKernelCommandLine(path, launcherPrefixes))
         arguments.push_back(std::move(argument));
@@ -950,6 +953,13 @@ void appendKernelCommandLine(
     if (!timeZone.empty()) {
         arguments.emplace_back(
             std::string {kernarium::timezone::prefix} + std::string {timeZone});
+    }
+    /* What the host's screen hides of the display, which the guest's display
+     * shape script turns into its cutout and rounded corners. */
+    if (!displayShape.empty()) {
+        arguments.emplace_back(
+            std::string {kernarium::display_shape::prefix} +
+            std::string {displayShape});
     }
 }
 
@@ -1071,6 +1081,9 @@ struct GuestRequest final {
     /* The host's time zone an Android guest is given for the launch, empty for
      * none; a Linux guest ignores it. */
     std::string timeZone;
+    /* What the host's screen hides of an Android guest's display, empty for
+     * nothing; a Linux guest ignores it. */
+    std::string displayShape;
     /* Where the run records how the session ended, empty for nowhere. */
     std::string sessionRecordPath;
 #if KERNARIUM_RUNTIME_ANDROID_GUEST
@@ -1402,7 +1415,8 @@ private:
             request_.dotsPerInch,
             request_.guestProcessorCount,
             request_.adbPublicKey,
-            request_.timeZone);
+            request_.timeZone,
+            request_.displayShape);
 #else
         /* A sealed ext4 derivative is attached read-only; the per-run /init
          * mounts either kind of image beneath the overlay. */
@@ -1557,6 +1571,10 @@ constexpr std::size_t bootSizeBeforeTimeZone =
 constexpr std::size_t bootSizeBeforeSessionRecord =
     offsetof(kernarium_runtime_boot, session_record_path);
 
+/* What a request states before the display shape was added to it. */
+constexpr std::size_t bootSizeBeforeDisplayShape =
+    offsetof(kernarium_runtime_boot, android_display_cutout_height_dp);
+
 int runtimeRun(
     KernariumMetalView view,
     const kernarium_runtime_boot* boot)
@@ -1637,7 +1655,20 @@ int runtimeRun(
         GuestRequest request;
         request.adbPublicKey = std::move(adbPublicKey);
         request.timeZone = std::move(timeZone);
-        if (boot->struct_size >= sizeof(kernarium_runtime_boot) &&
+        if (boot->struct_size >= sizeof(kernarium_runtime_boot)) {
+            const bool stated = boot->android_display_cutout_height_dp != 0 ||
+                boot->android_display_cutout_width_dp != 0 ||
+                boot->android_display_corner_radius_dp != 0;
+            if (auto shape = kernarium::display_shape::value(
+                    boot->android_display_cutout_height_dp,
+                    boot->android_display_cutout_width_dp,
+                    boot->android_display_corner_radius_dp))
+                request.displayShape = std::move(*shape);
+            else if (stated)
+                std::fputs(
+                    "Kernarium: ignoring an invalid display shape\n", stderr);
+        }
+        if (boot->struct_size >= bootSizeBeforeDisplayShape &&
             boot->session_record_path != nullptr) {
             const std::size_t length =
                 ::strnlen(boot->session_record_path, PATH_MAX);

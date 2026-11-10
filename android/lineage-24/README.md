@@ -277,6 +277,17 @@ has chosen a zone: it replaces a zone only if that is the one it applied last
 (marker `persist.sys.kernarium.timezone_applied`), so a zone picked in Android
 stays.
 
+### Display shape
+
+A host application whose display fills a phone's screen states what the screen
+hides of it at every start (`androidboot.kernarium.display_shape`: the height
+and width of the cutout in the middle of the top edge and the corners' radius,
+in dp; the standalone macOS launcher passes none).
+`kernarium_display_shape.sh` makes them the platform's display cutout and
+corner radius at boot completion, through resource overlays it fabricates as
+root and enables for user 0. It acts only when the shape differs from the one
+it applied last, and disables the overlays when a launch states none.
+
 ### Branding and diagnostics
 
 The Setup Wizard names the system Andarium through its runtime resource

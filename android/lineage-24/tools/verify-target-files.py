@@ -247,6 +247,8 @@ REQUIRED_ENTRIES = {
     "SYSTEM_EXT/etc/init/kernarium_reclaim_boot_apps.rc",
     "SYSTEM_EXT/bin/kernarium_time_zone.sh",
     "SYSTEM_EXT/etc/init/kernarium_time_zone.rc",
+    "SYSTEM_EXT/bin/kernarium_display_shape.sh",
+    "SYSTEM_EXT/etc/init/kernarium_display_shape.rc",
     "SYSTEM_EXT/etc/selinux/system_ext_file_contexts",
     "SYSTEM_EXT/etc/selinux/system_ext_property_contexts",
     "SYSTEM_EXT/etc/selinux/system_ext_sepolicy.cil",
@@ -792,6 +794,32 @@ TIME_ZONE_SCRIPT_FORBIDDEN = (
 TIME_ZONE_TRANSITION = re.compile(
     rb"^\(typetransition init(?:_[0-9]+)? kernarium_time_zone_exec process "
     rb"kernarium_time_zone\)$",
+    re.MULTILINE,
+)
+# Once boot completes a script makes what the host's screen hides of the display, which the host
+# application states at every start (ro.boot.kernarium.display_shape), the platform's display
+# cutout and corner radius, through resource overlays it fabricates as root, in a core domain of
+# its own on system_ext (overlay/tools/kernarium_display_shape.sh, overlay/sepolicy/system_ext/
+# private). The overlays persist, so it records the shape it applied in a marker property of its
+# own, the only property the domain sets.
+DISPLAY_SHAPE_SERVICE = (
+    "kernarium_display_shape", "/system_ext/bin/kernarium_display_shape.sh"
+)
+DISPLAY_SHAPE_TRIGGER = "property:sys.boot_completed=1"
+DISPLAY_SHAPE_MARKER = "persist.sys.kernarium.display_shape_applied"
+DISPLAY_SHAPE_MARKER_TYPE = "kernarium_display_shape_prop"
+DISPLAY_SHAPE_SCRIPT_REQUIRED = (
+    "ro.boot.kernarium.display_shape",
+    "cmd overlay fabricate",
+    "cmd overlay enable",
+    "android:string/config_mainBuiltInDisplayCutout",
+    "android:dimen/rounded_corner_radius",
+    DISPLAY_SHAPE_MARKER,
+    'setprop "$marker" "$shape"',
+)
+DISPLAY_SHAPE_TRANSITION = re.compile(
+    rb"^\(typetransition init(?:_[0-9]+)? kernarium_display_shape_exec process "
+    rb"kernarium_display_shape\)$",
     re.MULTILINE,
 )
 # The partition the host grew is filled on every boot, once /data is mounted
@@ -1388,6 +1416,12 @@ def check_boot_policy(
             "utf-8", errors="strict"
         ),
         read_small(archive, infos["SYSTEM_EXT/bin/kernarium_time_zone.sh"]),
+    )
+    check_display_shape(
+        read_small(archive, infos["SYSTEM_EXT/etc/init/kernarium_display_shape.rc"]).decode(
+            "utf-8", errors="strict"
+        ),
+        read_small(archive, infos["SYSTEM_EXT/bin/kernarium_display_shape.sh"]),
     )
     check_media_codecs_c2(read_small(archive, infos["VENDOR/etc/media_codecs_c2.xml"]))
 
@@ -2718,6 +2752,13 @@ def check_kernel_policy(
             "utf-8", errors="strict"
         ),
     )
+    check_display_shape_policy(
+        system_ext_policy,
+        read_small(archive, infos["SYSTEM_EXT/etc/selinux/system_ext_file_contexts"]),
+        read_small(archive, infos["SYSTEM_EXT/etc/selinux/system_ext_property_contexts"]).decode(
+            "utf-8", errors="strict"
+        ),
+    )
     check_property_writers(
         platform_policy,
         vendor_policy,
@@ -3158,6 +3199,90 @@ def check_time_zone_policy(
         if line.strip() and not line.lstrip().startswith("#")
     ):
         fail(f"system_ext property contexts do not label {TIME_ZONE_MARKER}")
+
+
+def check_display_shape(rc_payload: str, script: bytes) -> None:
+    """The script that applies the host screen's shape runs once after boot and overlays the cutout and corners."""
+    name, executable = DISPLAY_SHAPE_SERVICE
+    service = init_services(rc_payload).get(name)
+    if service is None or service[0] != executable:
+        fail(f"system_ext init policy does not declare the {name} service at {executable}")
+    for option in ("oneshot", "disabled"):
+        if option not in service[1]:
+            fail(f"system_ext init policy does not declare {name} as {option}")
+    actions = init_actions(rc_payload)
+    for trigger, commands in actions.items():
+        if f"start {name}" in commands and trigger != DISPLAY_SHAPE_TRIGGER:
+            fail(f"system_ext init policy starts {name} under '{trigger}'")
+    if f"start {name}" not in actions.get(DISPLAY_SHAPE_TRIGGER, []):
+        fail(f"system_ext init policy does not start {name} when boot completes")
+    code = "\n".join(
+        line
+        for line in script.decode("utf-8", errors="strict").splitlines()
+        if not line.lstrip().startswith("#")
+    )
+    for token in DISPLAY_SHAPE_SCRIPT_REQUIRED:
+        if token not in code:
+            fail(f"{executable} does not contain '{token}'")
+
+
+def check_display_shape_policy(
+    system_ext_policy: bytes, system_ext_file_contexts: bytes, system_ext_property_contexts: str
+) -> None:
+    """The script runs in its own core domain, uses only the overlay service, sets only its marker."""
+    domain = DISPLAY_SHAPE_SERVICE[0]
+    if file_context_label(system_ext_file_contexts, DISPLAY_SHAPE_SERVICE[1]) != (
+        f"u:object_r:{domain}_exec:s0"
+    ):
+        fail(f"system_ext file contexts do not label {DISPLAY_SHAPE_SERVICE[1]}")
+    if not DISPLAY_SHAPE_TRANSITION.search(system_ext_policy):
+        fail("system_ext policy does not move init into the display shape domain")
+
+    def has(source: str, target: str, object_class: bytes, permission: bytes) -> bool:
+        return any(
+            CIL_PLATFORM_VERSION_SUFFIX.sub("", match.group(1).decode()) == source
+            and CIL_PLATFORM_VERSION_SUFFIX.sub("", match.group(2).decode()) == target
+            and match.group(3) == object_class
+            and permission in match.group(4).split()
+            for match in CIL_ALLOW_RULE.finditer(system_ext_policy)
+        )
+
+    for source, target, object_class, permission, why in (
+        (domain, "overlay_service", b"service_manager", b"find",
+         "cmd finds the overlay service, which fabricates and enables the overlays"),
+        (domain, "system_server", b"binder", b"transfer",
+         "cmd hands the service the receiver of its result"),
+        ("system_server", domain, b"binder", b"call",
+         "cmd waits for the receiver of its result"),
+        ("system_server", domain, b"fd", b"use",
+         "the service writes to the descriptors cmd passes"),
+    ):
+        if not has(source, target, object_class, permission):
+            fail(
+                f"system_ext policy does not allow {source} {target} {object_class.decode()} "
+                f"{permission.decode()}: {why}"
+            )
+    if DISPLAY_SHAPE_MARKER_TYPE not in cil_attribute_members(
+        system_ext_policy, "system_property_type"
+    ):
+        fail(f"system_ext policy does not define the system-owned {DISPLAY_SHAPE_MARKER_TYPE}")
+    settable = {
+        CIL_PLATFORM_VERSION_SUFFIX.sub("", match.group(2).decode())
+        for match in CIL_PROPERTY_SET_RULE.finditer(system_ext_policy)
+        if CIL_PLATFORM_VERSION_SUFFIX.sub("", match.group(1).decode()) == domain
+        and b"set" in match.group(3).split()
+    }
+    if settable != {DISPLAY_SHAPE_MARKER_TYPE}:
+        fail(
+            f"system_ext policy lets the display shape domain set {sorted(settable)}, not only "
+            f"its own marker {DISPLAY_SHAPE_MARKER_TYPE}"
+        )
+    if not any(
+        line.split()[:2] == [DISPLAY_SHAPE_MARKER, f"u:object_r:{DISPLAY_SHAPE_MARKER_TYPE}:s0"]
+        for line in system_ext_property_contexts.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ):
+        fail(f"system_ext property contexts do not label {DISPLAY_SHAPE_MARKER}")
 
 
 def check_policy_relaxations(policies: tuple[bytes, ...], build_variant: str) -> None:

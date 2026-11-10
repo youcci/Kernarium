@@ -62,6 +62,7 @@ add_library(KernariumRuntime SHARED
     KernariumAdbChannel.hpp
     KernariumConsoleInput.hpp
     KernariumConsoleOutput.hpp
+    KernariumGuestDisplayShape.hpp
     KernariumGuestTimeZone.hpp
     KernariumKeyWake.hpp
     KernariumRestartLoop.hpp

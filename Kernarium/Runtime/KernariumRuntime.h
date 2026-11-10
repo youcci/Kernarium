@@ -95,7 +95,17 @@ enum {
  * boot on, then the end, a guest kernel panic with its message included. The
  * caller reads it at its next launch, before it boots again. Null keeps no
  * record; the runtime reads it only from a request whose struct_size covers
- * it. */
+ * it.
+ *
+ * An Android guest whose display reaches under the host screen's cutout and
+ * rounded corners is told so for this boot: android_display_cutout_height_dp
+ * and android_display_cutout_width_dp are the cutout in the middle of the
+ * display's top edge and android_display_corner_radius_dp the corners'
+ * radius, in density-independent pixels, all zero for a display the screen
+ * hides nothing of. The runtime reads them only from a request whose
+ * struct_size covers them, passes them as
+ * androidboot.kernarium.display_shape, and drops measures no screen has with
+ * a line on stderr: they never fail a boot. A Linux guest ignores them. */
 typedef struct kernarium_runtime_boot {
     uint32_t struct_size;
     uint32_t width;
@@ -116,6 +126,9 @@ typedef struct kernarium_runtime_boot {
     const char* android_adb_public_key;
     const char* android_time_zone;
     const char* session_record_path;
+    uint32_t android_display_cutout_height_dp;
+    uint32_t android_display_cutout_width_dp;
+    uint32_t android_display_corner_radius_dp;
 } kernarium_runtime_boot;
 
 /* What a launch's host GPU budget comes to, as the runtime evaluates it for
