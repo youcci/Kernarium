@@ -1,0 +1,19 @@
+kernel/mainline-6.18/artifacts/accepted-android-4k.env
+  s_83f5d907de3616::t_60e72f2ddc4081 3-4,7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "431df78702c63e08e7571f9f47db7df213979881",
+  "prompts": {},
+  "sessions": {
+    "s_83f5d907de3616": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a5ab82a9-5d39-4921-8909-98778519fb84",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
