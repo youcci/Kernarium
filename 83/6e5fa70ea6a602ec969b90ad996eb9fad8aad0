@@ -1,0 +1,66 @@
+Kernarium/Runtime/KernariumRuntime.mm
+  s_83f5d907de3616::t_0922bc1e683cd7 7,885-886,897-898,957-963,1084-1086,1418-1419,1574-1577,1658-1671
+Kernarium/Runtime/KernariumRuntime.h
+  s_83f5d907de3616::t_0922bc1e683cd7 98-108,129-131
+Andarium/Andarium/Live/GuestLayer.swift
+  s_83f5d907de3616::t_1ccb27d806ebf4 32,40-49
+  s_83f5d907de3616::t_b2dee8d14677c3 50-52
+Andarium/AndariumCore/Sources/AndariumCore/SessionGestureDeferral.swift
+  s_83f5d907de3616::t_8476123985e6c5 27-30
+android/lineage-24/overlay/sepolicy/system_ext/private/property_contexts
+  s_83f5d907de3616::t_307eaf4f6cbf97 12-15
+android/lineage-24/tools/verify-target-files.py
+  s_83f5d907de3616::t_cec2c08c3dae1c 250-251,799-824,1420-1425,2755-2761,3204-3285
+  s_83f5d907de3616::t_b61189c1eb1588 3286-3287
+GuestHost/Sources/GuestDisplay.swift
+  s_83f5d907de3616::t_66dfeae56e472f 12-15,150-153,169-170,173-175,189-190
+tests/unit/kernarium/guest_display_shape_tests.cpp
+  s_83f5d907de3616::t_0922bc1e683cd7 38,40,43,45-46
+  s_83f5d907de3616::t_f2a85b31c23766 1-37,39,41-42,44,47
+Andarium/README.md
+  s_83f5d907de3616::t_61b6f267c445d3 242-247
+tests/unit/kernarium/CMakeLists.txt
+  s_83f5d907de3616::t_0922bc1e683cd7 81-90
+android/lineage-24/overlay/tools/Android.bp
+  s_83f5d907de3616::t_307eaf4f6cbf97 90-100
+android/lineage-24/overlay/tools/kernarium_display_shape.sh
+  s_83f5d907de3616::t_307eaf4f6cbf97 1-104
+Kernarium/Runtime/CMakeLists.txt
+  s_83f5d907de3616::t_0922bc1e683cd7 65
+android/lineage-24/overlay/sepolicy/system_ext/private/kernarium_display_shape.te
+  s_83f5d907de3616::t_307eaf4f6cbf97 1-35
+android/lineage-24/overlay/sepolicy/system_ext/private/file_contexts
+  s_83f5d907de3616::t_307eaf4f6cbf97 10-12
+android/lineage-24/README.md
+  s_83f5d907de3616::t_61b6f267c445d3 280-290
+Andarium/Andarium/Live/LiveRuntime.swift
+  s_83f5d907de3616::t_66dfeae56e472f 290-292,303,314-315,347-350
+android/lineage-24/overlay/tools/kernarium_display_shape.rc
+  s_83f5d907de3616::t_307eaf4f6cbf97 1-11
+tests/tooling/android/test_builder_lane.py
+  s_83f5d907de3616::t_cec2c08c3dae1c 830,1460-1489,1510-1515,1604-1609,1662-1663,1743-1764,3174-3191,4052-4065
+Andarium/AndariumCore/Tests/AndariumCoreTests/GuestDisplayShapeTests.swift
+  s_83f5d907de3616::t_66dfeae56e472f 1-34
+android/lineage-24/overlay/lineage_andarium.mk
+  s_83f5d907de3616::t_307eaf4f6cbf97 487-493
+Andarium/AndariumCore/Sources/AndariumCore/GuestDisplayShape.swift
+  s_83f5d907de3616::t_66dfeae56e472f 1-36
+Kernarium/Runtime/KernariumGuestDisplayShape.hpp
+  s_83f5d907de3616::t_f2a85b31c23766 1-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "836e5fa70ea6a602ec969b90ad996eb9fad8aad0",
+  "prompts": {},
+  "sessions": {
+    "s_83f5d907de3616": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a5ab82a9-5d39-4921-8909-98778519fb84",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
