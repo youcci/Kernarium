@@ -1,0 +1,40 @@
+darwin/device/gpu/native_display_common.cpp
+  s_83f5d907de3616::t_da540be9f2a0c0 74-78
+darwin/device/gpu/native_display_ios.mm
+  s_83f5d907de3616::t_da540be9f2a0c0 134-137
+Andarium/Config/Info.plist
+  s_83f5d907de3616::t_da540be9f2a0c0 5-6
+darwin/device/gpu/display.hpp
+  s_83f5d907de3616::t_da540be9f2a0c0 107-112
+darwin/device/gpu/native_display.hpp
+  s_83f5d907de3616::t_da540be9f2a0c0 36
+tests/unit/gpu/virtio_gpu_device_lifetime_tests.cpp
+  s_83f5d907de3616::t_da540be9f2a0c0 64-67,625,1514-1550,3765
+docs/graphics.md
+  s_83f5d907de3616::t_1cf925b224a997 170-174
+darwin/device/gpu/virtio_gpu_device.cpp
+  s_83f5d907de3616::t_da540be9f2a0c0 334-335,381-389,391,933-934
+GuestHost/Sources/GuestDisplay.swift
+  s_83f5d907de3616::t_46842e2b8ef3fc 332-349
+  s_83f5d907de3616::t_081e66088a89c0 145-149,350-354
+darwin/device/gpu/native_display_state.hpp
+  s_83f5d907de3616::t_da540be9f2a0c0 42-43
+darwin/device/gpu/virtio_gpu_device_testing.hpp
+  s_83f5d907de3616::t_862466f00d2408 28-31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e84a21199feac63554da8d8890736b2890a9b0b5",
+  "prompts": {},
+  "sessions": {
+    "s_83f5d907de3616": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a5ab82a9-5d39-4921-8909-98778519fb84",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
