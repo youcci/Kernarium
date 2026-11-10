@@ -596,6 +596,13 @@ PRODUCT_PACKAGES += kernarium_oldapp
 PRODUCT_PACKAGES += kernarium_apps
 PRODUCT_PACKAGES += KernariumIcons
 
+# A host application whose display fills a phone's screen states what the
+# screen hides of it at every start (ro.boot.kernarium.display_shape): the
+# cutout in the top edge and the corners' radius. Once boot completes this
+# script makes them the platform's display cutout and corner radius. It runs
+# from system_ext in a core domain of its own.
+PRODUCT_PACKAGES += kernarium_display_shape_script
+
 # A Vulkan hardware-buffer import check: it fills gralloc buffers of several
 # formats and widths through the CPU, imports each into Vulkan and reads it
 # back, so a row pitch the driver cannot import or the renderer misreads fails

@@ -829,9 +829,10 @@ address space holds, so this is a fallback.
   its density is 160 dpi a point of choice (`GuestDisplayLayout`), so
   Android's interface keeps its size at every choice. The row states what the
   next start gives: the display is the window less the session's safe area
-  (`SessionDisplayArea`, read by `DisplayAreaProbe`), and follows a window as it
-  resizes. A choice applies at the next start. Native is stored as the symbol
-  and follows the screen, and a stored number that is no choice of this screen
+  (`SessionDisplayArea`, read by `DisplayAreaProbe`), or the whole screen where
+  it fills it (Display shape), and follows a window as it resizes. A choice
+  applies at the next start. Native is stored as the symbol and follows the
+  screen, and a stored number that is no choice of this screen
   goes to the nearest one. A person who never chose gets the choice nearest 1.5
   (240 dpi) where the system holds the application to 4 GiB of memory or less,
   else the choice nearest 2.0 (320 dpi), which is native only where native is
@@ -840,6 +841,13 @@ address space holds, so this is a fallback.
   is stored as a scale and stays. Native's host allocations count against the
   same iOS process limit as guest RAM; neither the graphics-memory estimate
   nor the memory default counts the display's pixels.
+- **Display shape.** On an iPhone the guest's display fills the screen, and
+  every start states the notch or island and the corners' radius
+  (`GuestDisplayShape`, the boot request's `android_display_*` fields), which
+  the system image makes Android's
+  [display cutout and corners](../android/lineage-24/README.md#display-shape).
+  Recovery, a display that folds, and every display on an iPad keep to the
+  safe area.
 - **JIT.** A build on a device has a JIT row in Home's Performance section,
   off until the person turns it on and kept for the install
   (`JitPreference`). An iOS

@@ -1202,6 +1202,17 @@ that read, so no call draws a denial and the shell domain gains no permission.
   are between the tool and the application of one image, which ship together. `tests/integration/android/run_android_app_shortcuts.py`
   qualifies it ([testing](../../docs/testing.md#android)).
 
+### Display shape
+
+A host application whose display fills a phone's screen states what the screen
+hides of it at every start (`androidboot.kernarium.display_shape`: the height
+and width of the cutout in the middle of the top edge and the corners' radius,
+in dp; the standalone macOS launcher passes none).
+`kernarium_display_shape.sh` makes them the platform's display cutout and
+corner radius at boot completion, through resource overlays it fabricates as
+root and enables for user 0. It acts only when the shape differs from the one
+it applied last, and disables the overlays when a launch states none.
+
 ### Branding and diagnostics
 
 The Setup Wizard names the system Andarium through its runtime resource

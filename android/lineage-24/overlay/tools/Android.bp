@@ -98,6 +98,17 @@ sh_binary {
     init_rc: ["kernarium_keyboard_default.rc"],
 }
 
+// Makes the shape of the host's screen the display's cutout and corner radius
+// once boot completes. It runs `cmd overlay`, so it is installed on system_ext
+// for a core domain of its own (kernarium_display_shape).
+sh_binary {
+    name: "kernarium_display_shape_script",
+    src: "kernarium_display_shape.sh",
+    system_ext_specific: true,
+    filename_from_src: true,
+    init_rc: ["kernarium_display_shape.rc"],
+}
+
 cc_binary {
     name: "kernarium_vk_ahb_import",
     srcs: ["kernarium_vk_ahb_import.cpp"],

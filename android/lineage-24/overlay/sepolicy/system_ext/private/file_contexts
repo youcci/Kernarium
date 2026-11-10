@@ -16,3 +16,6 @@
 /(system_ext|system/system_ext)/bin/kernarium_sms_listener  u:object_r:kernarium_sms_listener_exec:s0
 /(system_ext|system/system_ext)/bin/kernarium_sms_wake\.sh  u:object_r:kernarium_sms_wake_exec:s0
 /dev/socket/kernarium_sms  u:object_r:kernarium_sms_socket:s0
+
+# Applies the shape of the host's screen once the system is up.
+/(system_ext|system/system_ext)/bin/kernarium_display_shape\.sh  u:object_r:kernarium_display_shape_exec:s0

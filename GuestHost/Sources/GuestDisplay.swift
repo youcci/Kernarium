@@ -10,6 +10,10 @@ import UIKit
 struct GuestDisplayGeometry {
     let pixelSize: CGSize
     let dotsPerInch: UInt32
+    /// How far the display's top edge reaches above the screen's safe area,
+    /// in points: what a notch or an island can hide of it. Zero for a display
+    /// laid out inside the safe area.
+    var topInset: CGFloat = 0
 }
 
 /// What VoiceOver makes of the guest's display, in the application's words.
@@ -278,19 +282,20 @@ class GuestMetalView: MTKView, UIGestureRecognizerDelegate, UIPointerInteraction
     }
 
     func reportLayout() {
-        guard let screen = window?.screen,
-              // SwiftUI supplies safe-area-excluded point bounds, which the
-              // scale turns into guest pixels, fractional native scales
-              // included.
+        guard let window,
+              // SwiftUI supplies point bounds, the safe area's too where the
+              // display fills the screen, which the scale turns into guest
+              // pixels, fractional native scales included.
               let layout = GuestDisplayLayout(
-                  scale: scale, points: bounds.size, nativeScale: Double(screen.nativeScale)
+                  scale: scale, points: bounds.size, nativeScale: Double(window.screen.nativeScale)
               ) else { return }
         drawableSize = layout.pixelSize
         viewDidLayout?(
             self,
             GuestDisplayGeometry(
                 pixelSize: layout.pixelSize,
-                dotsPerInch: UInt32(layout.dotsPerInch)
+                dotsPerInch: UInt32(layout.dotsPerInch),
+                topInset: max(0, window.safeAreaInsets.top - convert(bounds, to: window).minY)
             )
         )
     }

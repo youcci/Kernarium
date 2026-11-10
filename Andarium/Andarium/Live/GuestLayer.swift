@@ -18,7 +18,8 @@ struct GuestLayer: View {
             // Home states the resolution the guest will get, which is this
             // display's size at the choice, so the display's size is read
             // whether or not the guest is shown.
-            DisplayAreaProbe(cornerEdges: SceneCoverage.cornerOffsetEdges(coversScreen: coversScreen))
+            DisplayAreaProbe(
+                cornerEdges: SceneCoverage.cornerOffsetEdges(coversScreen: coversScreen), fillsScreen: fillsScreen)
             if showsGuest {
                 // On a display that folds the plan places the guest in window
                 // coordinates: the whole safe area, or the upper half while the
@@ -40,11 +41,27 @@ struct GuestLayer: View {
                     }
                     .frame(width: geo.size.width, height: geo.size.height)
                 }
-                .ignoresSafeArea(plan == nil ? [] : .all)
+                // A fold plan places the guest in window coordinates, and a
+                // display that fills the screen reaches under the cutout and
+                // the corners, but never under the keyboard.
+                .ignoresSafeArea(plan != nil ? .all : fillsScreen ? .container : [])
             }
         }
         .background {
             SceneCoverageReader { coversScreen = $0 }
+        }
+    }
+
+    /// Whether the display runs edge to edge. An iPhone's scene always covers
+    /// its screen, and Android is told what the screen hides
+    /// (`GuestDisplayShape`). Recovery draws a screen of its own that knows
+    /// no cutout, and an iPad's scene can become a window during a run, which
+    /// a shape stated at boot would not follow: both keep to the safe area.
+    private var fillsScreen: Bool {
+        guard UIDevice.current.userInterfaceIdiom == .phone else { return false }
+        switch model.phase {
+        case .booting(.recovery), .running(.recovery): return false
+        case .home, .booting, .running, .failed: return true
         }
     }
 

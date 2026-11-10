@@ -189,16 +189,19 @@ struct ResolutionSheet: View {
 /// gives the part the status bar takes, which the session hides
 /// (`SessionDisplayArea`). The screen's native scale is read from the window's
 /// screen. It follows the window's size as it changes. On a display that folds
-/// the size is the session plan's guest (`SessionPlan`).
+/// the size is the session plan's guest (`SessionPlan`). A display that fills
+/// the screen (`fillsScreen`) is the whole window.
 struct DisplayAreaProbe: View {
     @Environment(AppModel.self) private var model
     let cornerEdges: Edge.Set
+    var fillsScreen = false
     @State private var size = CGSize.zero
     @State private var window: WindowReading?
 
     var body: some View {
         Color.clear
             .containerCornerOffset(cornerEdges, sizeToFit: true)
+            .ignoresSafeArea(fillsScreen ? .container : [])
             .onGeometryChange(for: CGSize.self, of: \.size) {
                 size = $0
                 publish()
@@ -225,6 +228,10 @@ struct DisplayAreaProbe: View {
         // the device stands the upper half.
         if let plan = model.sessionPlan {
             model.displayPointsDidChange(plan.guest.size)
+            return
+        }
+        if fillsScreen {
+            model.displayPointsDidChange(size)
             return
         }
         model.displayPointsDidChange(

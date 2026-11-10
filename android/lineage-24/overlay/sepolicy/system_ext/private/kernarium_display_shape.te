@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# After boot completes the product makes the shape of the host's screen the
+# display's cutout and corner radius (tools/kernarium_display_shape.sh):
+# `cmd overlay fabricate` and `cmd overlay enable` create and enable resource
+# overlays through the platform's overlay manager. A vendor domain may neither
+# execute /system/bin/cmd nor be the framework's client, so the script runs in
+# a core domain defined here, as the time zone script does. The only property
+# the domain sets is its own marker.
+type kernarium_display_shape, domain;
+typeattribute kernarium_display_shape coredomain;
+type kernarium_display_shape_exec, exec_type, system_file_type, file_type;
+
+init_daemon_domain(kernarium_display_shape)
+binder_use(kernarium_display_shape)
+
+# The shell script, and getprop, log and printf from the toolbox.
+allow kernarium_display_shape shell_exec:file rx_file_perms;
+allow kernarium_display_shape toolbox_exec:file rx_file_perms;
+# cmd runs in the script's domain.
+allow kernarium_display_shape system_file:file execute_no_trans;
+
+# cmd finds the overlay service and hands it the descriptors it writes the
+# output to and the binder it receives the result on: the descriptors are the
+# script's own.
+allow kernarium_display_shape overlay_service:service_manager find;
+allow kernarium_display_shape system_server:binder transfer;
+allow system_server kernarium_display_shape:binder call;
+allow system_server kernarium_display_shape:fd use;
+allow system_server kernarium_display_shape:fifo_file { getattr read write };
+
+# The shape the script applied last, so a boot with the same one changes
+# nothing.
+system_internal_prop(kernarium_display_shape_prop)
+set_prop(kernarium_display_shape, kernarium_display_shape_prop)

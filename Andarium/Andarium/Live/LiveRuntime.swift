@@ -701,6 +701,9 @@ final class LiveRuntime: RuntimeDriver {
         // The zone the host is in now, read at every start: the guest follows
         // it while its own automatic time zone is on.
         let timeZone = GuestTimeZone.current()
+        // What the screen hides of a display that fills it, so Android lays
+        // out around the notch or island and the corners.
+        let displayShape = GuestDisplayShape(topInset: geometry.topInset)
         let sessionRecordPath = sessionRecord?.path
         // What this start chose, beside the runtime's record of the session, for
         // a bug report to say.
@@ -726,8 +729,8 @@ final class LiveRuntime: RuntimeDriver {
                 view: view, dataDiskPath: dataDiskPath, releasePath: releasePath, dataGiB: dataGiB, bootMode: bootMode,
                 width: width, height: height, dotsPerInch: dotsPerInch, memoryMiB: memoryMiB,
                 processorCount: processorCount, adbKeyLine: adbKeyLine, timeZone: timeZone,
-                sessionRecordPath: sessionRecordPath, hostFeatures: hostFeatures, cameraMode: cameraMode,
-                cameraPath: cameraPath, extras: extras, rootBoot: rootBoot
+                displayShape: displayShape, sessionRecordPath: sessionRecordPath, hostFeatures: hostFeatures,
+                cameraMode: cameraMode, cameraPath: cameraPath, extras: extras, rootBoot: rootBoot
             )
             stop.end()
             Task { @MainActor in self.finished(result: result) }
@@ -739,7 +742,8 @@ final class LiveRuntime: RuntimeDriver {
     private nonisolated static func runGuest(
         view: GuestMetalView, dataDiskPath: String, releasePath: String, dataGiB: UInt32, bootMode: UInt32,
         width: UInt32, height: UInt32, dotsPerInch: UInt32, memoryMiB: UInt32,
-        processorCount: UInt32, adbKeyLine: String?, timeZone: String?, sessionRecordPath: String?,
+        processorCount: UInt32, adbKeyLine: String?, timeZone: String?,
+        displayShape: GuestDisplayShape?, sessionRecordPath: String?,
         hostFeatures: UInt32, cameraMode: UInt32, cameraPath: String?, extras: StartExtras, rootBoot: Bool
     ) -> Int32 {
         dataDiskPath.withCString { dataDisk in
@@ -786,6 +790,10 @@ final class LiveRuntime: RuntimeDriver {
                                 request.use_jit = extras.jit ? 1 : 0
                                 // The release's Magisk-patched ramdisk, or its own.
                                 request.android_root = rootBoot ? 1 : 0
+                                // What the screen hides of the display, or nothing.
+                                request.android_display_cutout_height_dp = displayShape?.cutoutHeight ?? 0
+                                request.android_display_cutout_width_dp = displayShape?.cutoutWidth ?? 0
+                                request.android_display_corner_radius_dp = displayShape?.cornerRadius ?? 0
                                 return withUnsafePointer(to: &request) { kernarium_runtime_loader_run(view, $0) }
                             }
                         }

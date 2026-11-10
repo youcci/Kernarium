@@ -10,6 +10,7 @@
 #include "KernariumConsoleInput.hpp"
 #include "KernariumConsoleOutput.hpp"
 #include "KernariumGpuHold.hpp"
+#include "KernariumGuestDisplayShape.hpp"
 #include "KernariumGuestTimeZone.hpp"
 #include "KernariumHostFeatures.hpp"
 #if KERNARIUM_RUNTIME_ANDROID_GUEST
@@ -1239,7 +1240,8 @@ void appendKernelCommandLine(
     std::string_view timeZone,
     std::uint32_t hostFeatures,
     std::string_view cameraLayout,
-    const std::optional<std::string>& serial)
+    const std::optional<std::string>& serial,
+    std::string_view displayShape)
 {
     const auto path = storage.release() / uml::android::releaseCommandLine;
     constexpr std::string_view adbAuthorizationPrefix {
@@ -1251,7 +1253,8 @@ void appendKernelCommandLine(
         kernarium::adb::keyPrefix,
         kernarium::adb::tcpPrefix,
         kernarium::timezone::prefix,
-        uml::camera::layoutArgumentPrefix};
+        uml::camera::layoutArgumentPrefix,
+        kernarium::display_shape::prefix};
     /* A run that has the installation's serial number drops the release's
      * fixed one; a run that has none leaves the release's command line as it
      * is. */
@@ -1327,6 +1330,13 @@ void appendKernelCommandLine(
     /* Android init imports this as ro.boot.serialno and ro.serialno. */
     if (serial)
         arguments.emplace_back(uml::android::serialArgument(*serial));
+    /* What the host's screen hides of the display, which the guest's display
+     * shape script turns into its cutout and rounded corners. */
+    if (!displayShape.empty()) {
+        arguments.emplace_back(
+            std::string {kernarium::display_shape::prefix} +
+            std::string {displayShape});
+    }
 }
 
 #endif
@@ -1462,6 +1472,9 @@ struct GuestRequest final {
      * resolved; empty values leave the guest with what it has without them. */
     uml::android::InstallationIdentity identity;
 #endif
+    /* What the host's screen hides of an Android guest's display, empty for
+     * nothing; a Linux guest ignores it. */
+    std::string displayShape;
     /* Where the run records how the session ended, empty for nowhere. */
     std::string sessionRecordPath;
     /* The JIT cache budget of a run on the JIT engine, in bytes, or zero for
@@ -2050,7 +2063,8 @@ private:
             request_.timeZone,
             request_.hostFeatures,
             cameras_.layout,
-            request_.identity.serial);
+            request_.identity.serial,
+            request_.displayShape);
 #else
         /* A sealed ext4 derivative is attached read-only; the per-run /init
          * mounts either kind of image beneath the overlay. */
@@ -2286,6 +2300,11 @@ std::size_t readyJitCacheBudget(
     return 0;
 }
 
+/* What a request states once it covers the display shape (runtime API 47). */
+constexpr std::size_t bootSizeWithDisplayShape =
+    offsetof(kernarium_runtime_boot, android_display_corner_radius_dp) +
+    sizeof(std::uint32_t);
+
 int runtimeRun(
     KernariumMetalView view,
     const kernarium_runtime_boot* boot)
@@ -2378,6 +2397,19 @@ int runtimeRun(
         std::uint32_t grantedRefreshRate = 60;
         request.adbPublicKey = std::move(adbPublicKey);
         request.timeZone = std::move(timeZone);
+        if (boot->struct_size >= bootSizeWithDisplayShape) {
+            const bool stated = boot->android_display_cutout_height_dp != 0 ||
+                boot->android_display_cutout_width_dp != 0 ||
+                boot->android_display_corner_radius_dp != 0;
+            if (auto shape = kernarium::display_shape::value(
+                    boot->android_display_cutout_height_dp,
+                    boot->android_display_cutout_width_dp,
+                    boot->android_display_corner_radius_dp))
+                request.displayShape = std::move(*shape);
+            else if (stated)
+                std::fputs(
+                    "Kernarium: ignoring an invalid display shape\n", stderr);
+        }
         if (boot->struct_size >= bootSizeBeforeJit &&
             boot->session_record_path != nullptr) {
             const std::size_t length =
