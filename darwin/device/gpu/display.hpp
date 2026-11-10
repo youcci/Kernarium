@@ -104,6 +104,12 @@ public:
 
     [[nodiscard]] virtual std::uint32_t width() const noexcept = 0;
     [[nodiscard]] virtual std::uint32_t height() const noexcept = 0;
+    /* The rate the guest's mode is advertised at, in hertz: the host
+     * screen's where the display knows one. */
+    [[nodiscard]] virtual std::uint32_t refreshRate() const noexcept
+    {
+        return 60;
+    }
     /* Native AppKit/UIKit surfaces publish resize readiness from the UI
      * thread. The transport drains and applies it on its GPU owner thread. */
     [[nodiscard]] virtual int resizeEventDescriptor() const noexcept

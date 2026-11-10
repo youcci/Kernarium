@@ -61,6 +61,10 @@ public:
     {
         return displayHeight;
     }
+    [[nodiscard]] std::uint32_t refreshRate() const noexcept override
+    {
+        return displayRefreshRate;
+    }
 
     [[nodiscard]] bool guestScanoutChanged(
         std::uint32_t width,
@@ -618,6 +622,7 @@ public:
     bool fullCpuFallback {};
     std::uint32_t displayWidth {64};
     std::uint32_t displayHeight {64};
+    std::uint32_t displayRefreshRate {60};
     std::uint32_t lastDisplaySourceWidth {};
     std::uint32_t lastDisplaySourceHeight {};
     std::size_t lastDisplaySourceRowBytes {};
@@ -1504,6 +1509,43 @@ void refusedBlobIsAnsweredAsOutOfMemory()
     require(dependencies.resources.contains(create.resourceId));
     require(dependencies.memoryRefusalCount == 1,
         "a blob that was created was counted as a refusal");
+}
+
+/* The refresh rate the detailed timing of a display's EDID works out to. */
+std::uint32_t edidRefreshRate(
+    std::uint32_t width,
+    std::uint32_t height,
+    std::uint32_t displayRefreshRate)
+{
+    FakeGpuDependencies dependencies;
+    dependencies.displayWidth = width;
+    dependencies.displayHeight = height;
+    dependencies.displayRefreshRate = displayRefreshRate;
+    VirtioGpuDevice device {
+        dependencies, noGuestReads, noGuestMappings, 480};
+    auto request = newRequest<protocol::GpuGetEdid>(GpuCommand::getEdid);
+    request.scanoutId = protocol::primaryScanoutId;
+    const auto bytes = device.process(requestBytes(request), false);
+    require(responseType(bytes) == protocol::GpuResponse::okEdid);
+    protocol::GpuEdid response {};
+    std::memcpy(&response, bytes.data(), sizeof(response));
+    const auto& edid = response.edid;
+    const std::uint64_t clock = (edid[54] | (edid[55] << 8U)) * 10000ULL;
+    const std::uint64_t horizontalTotal = width +
+        (edid[57] | ((edid[58] & 0x0fU) << 8U));
+    const std::uint64_t verticalTotal = height +
+        (edid[60] | ((edid[61] & 0x0fU) << 8U));
+    const auto frame = horizontalTotal * verticalTotal;
+    return static_cast<std::uint32_t>((clock + frame / 2U) / frame);
+}
+
+void edidTimingFollowsTheDisplayRefreshRate()
+{
+    require(edidRefreshRate(1290, 2796, 60) == 60);
+    require(edidRefreshRate(1290, 2796, 120) == 120);
+    require(edidRefreshRate(1668, 2420, 120) == 120);
+    require(edidRefreshRate(2064, 2752, 120) == 60,
+        "a mode whose clock overflows at 120 Hz did not keep 60 Hz");
 }
 
 void edidReportsDisplayPixelsAndEffectiveDensity()
@@ -3720,6 +3762,7 @@ int main()
     using namespace uml::gpu::testing;
 
     edidReportsDisplayPixelsAndEffectiveDensity();
+    edidTimingFollowsTheDisplayRefreshRate();
     displayChangeEventsPreserveAResizeThatRacesGuestClear();
     contextInitUsesVirgl2ForTheDeviceSelectedDefault();
     aRendererWithoutVulkanOffersAndRunsNoVenus();

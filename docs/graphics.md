@@ -167,7 +167,11 @@ replacement or a preload: unmodified libgbm loads it through its documented
 backend interface and it adds only planar buffers. Deleting the file, or
 `GBM_BACKEND=dri` for one process, restores Mesa alone.
 
-The GPU advertises display geometry and density through EDID; Kernarium's
+The GPU advertises display geometry, density and refresh rate through EDID.
+The rate is 60 Hz, except on iOS, where it is the screen's maximum and the
+display view asks the screen for that rate while guest frames arrive. A mode
+whose pixel clock does not fit the EDID timing at the screen's rate keeps
+60 Hz. Kernarium's
 point and Retina geometry is in
 [`../Kernarium/README.md`](../Kernarium/README.md#devices-and-display).
 

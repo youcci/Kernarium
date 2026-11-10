@@ -71,6 +71,11 @@ std::uint32_t NativeDisplay::height() const noexcept
     return state_->geometryPolicy.advertisedSize().height;
 }
 
+std::uint32_t NativeDisplay::refreshRate() const noexcept
+{
+    return state_->refreshRate;
+}
+
 int NativeDisplay::resizeEventDescriptor() const noexcept
 {
     return state_->resizeNotifier.descriptor();

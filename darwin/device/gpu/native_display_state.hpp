@@ -39,6 +39,8 @@ struct NativeDisplayStateCore {
     MetalPresentation presentation;
     DisplayResizeNotifier resizeNotifier;
     DisplayGeometryPolicy geometryPolicy;
+    /* Hertz. Written once, while the view is attached. */
+    std::uint32_t refreshRate {60};
     std::atomic_bool resizeInProgress {};
     std::atomic_bool resizeCommitPending {};
     std::mutex resizeLifecycleMutex;

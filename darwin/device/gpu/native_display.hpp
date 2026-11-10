@@ -33,6 +33,7 @@ public:
 
     [[nodiscard]] std::uint32_t width() const noexcept override;
     [[nodiscard]] std::uint32_t height() const noexcept override;
+    [[nodiscard]] std::uint32_t refreshRate() const noexcept override;
     [[nodiscard]] int resizeEventDescriptor() const noexcept override;
     [[nodiscard]] bool drainResizeEvent() override;
     [[nodiscard]] bool guestScanoutChanged(

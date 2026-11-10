@@ -142,6 +142,11 @@ final class GuestMetalView: MTKView, UIKeyInput {
     override var canBecomeFirstResponder: Bool { true }
     // While the guest has the keyboard focus, three fingers are the guest's
     // touches, not UIKit's undo, redo, copy and paste gestures.
+    /// Asks the screen for its full refresh rate while guest frames arrive: a
+    /// ProMotion screen shows a layer nothing votes for at 60 Hz. It pauses
+    /// when the frames stop, so an idle display can slow down again.
+    private var frameRateVote: CADisplayLink?
+    private var lastGuestFrame = CFTimeInterval(0)
     override var editingInteractionConfiguration: UIEditingInteractionConfiguration { .none }
     var hasText: Bool { true }
     var keyboardType: UIKeyboardType = .asciiCapable
@@ -324,7 +329,29 @@ final class GuestMetalView: MTKView, UIKeyInput {
 
     override func didMoveToWindow() {
         super.didMoveToWindow()
-        if window == nil { cancelTrackedTouches() }
+        // The link retains the view, so it lives only while a window does.
+        frameRateVote?.invalidate()
+        frameRateVote = nil
+        guard window != nil else {
+            cancelTrackedTouches()
+            return
+        }
+        let link = CADisplayLink(target: self, selector: #selector(frameRateVoteDidFire))
+        link.preferredFrameRateRange = CAFrameRateRange(minimum: 60, maximum: 120, preferred: 120)
+        link.isPaused = true
+        link.add(to: .main, forMode: .common)
+        frameRateVote = link
+    }
+
+    /// The runtime draws each guest frame through here.
+    override func draw() {
+        super.draw()
+        lastGuestFrame = CACurrentMediaTime()
+        frameRateVote?.isPaused = false
+    }
+
+    @objc private func frameRateVoteDidFire(_ link: CADisplayLink) {
+        if link.timestamp - lastGuestFrame > 0.5 { link.isPaused = true }
     }
 
     private func sendKey(code: UInt16, pressed: Bool) {

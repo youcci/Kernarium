@@ -331,7 +331,8 @@ void writeMonitorDescriptor(
 std::array<std::uint8_t, protocol::baseEdidSize> makeEdid(
     std::uint32_t width,
     std::uint32_t height,
-    std::uint32_t dotsPerInch)
+    std::uint32_t dotsPerInch,
+    std::uint32_t refreshRate)
 {
     std::array<std::uint8_t, protocol::baseEdidSize> edid {};
     constexpr std::array<std::uint8_t, 8> header {
@@ -377,11 +378,17 @@ std::array<std::uint8_t, protocol::baseEdidSize> makeEdid(
         1023U, std::max<std::uint32_t>(8U, horizontalBlank / 3U));
     constexpr std::uint32_t verticalSyncOffset = 3;
     constexpr std::uint32_t verticalSyncPulse = 5;
+    const auto clockAt = [&](std::uint32_t rate) {
+        return ((static_cast<std::uint64_t>(width) + horizontalBlank) *
+                       (static_cast<std::uint64_t>(height) + verticalBlank) *
+                       rate +
+                   5000U) /
+            10000U;
+    };
+    /* The timing's clock is 16 bits of 10 kHz. A mode too large for it at
+     * the display's rate keeps 60 Hz rather than a rate the clamp leaves. */
     const auto clock = std::clamp<std::uint64_t>(
-        ((static_cast<std::uint64_t>(width) + horizontalBlank) *
-             (static_cast<std::uint64_t>(height) + verticalBlank) * 60U +
-            5000U) /
-            10000U,
+        clockAt(refreshRate) <= 65535U ? clockAt(refreshRate) : clockAt(60U),
         1U,
         65535U);
 
@@ -923,7 +930,8 @@ std::vector<std::uint8_t> VirtioGpuDevice::edid(
     information.header.flags &=
         protocol::gpuFlagFence | protocol::gpuFlagInfoRingIndex;
     information.size = protocol::baseEdidSize;
-    const auto base = makeEdid(width, height, dotsPerInch_);
+    const auto base = makeEdid(
+        width, height, dotsPerInch_, UML_GPU_DISPLAY.refreshRate());
     std::copy(base.begin(), base.end(), information.edid.begin());
     std::vector<std::uint8_t> bytes(sizeof(information));
     std::memcpy(bytes.data(), &information, sizeof(information));

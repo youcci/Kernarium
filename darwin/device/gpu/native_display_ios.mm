@@ -131,6 +131,10 @@ void NativeDisplayState::attachView(void* nativeView)
         UmlIOSMetalViewDelegate* viewDelegate =
             [[UmlIOSMetalViewDelegate alloc] initWithState:state];
         state->view = metalView;
+        const NSInteger screenRate =
+            metalView.window.windowScene.screen.maximumFramesPerSecond;
+        if (screenRate > 0)
+            state->refreshRate = static_cast<std::uint32_t>(screenRate);
         state->delegate = viewDelegate;
         metalView.delegate = viewDelegate;
         const auto guestSize = state->geometryPolicy.activeGuestSize();
