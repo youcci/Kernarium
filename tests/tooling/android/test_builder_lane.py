@@ -1634,6 +1634,9 @@ def verify_target_files_fixtures(verifier: Path) -> None:
             str(kernel_config),
             "--kernel-release-file",
             str(kernel_release),
+            # The fixtures hold none of Google's applications, whatever the tracked tree builds.
+            "--google-apps",
+            "none",
         ]
 
         video_service = tool.VIDEO_ENCODER_SERVICE
@@ -4389,6 +4392,10 @@ def verify_target_files_fixtures(verifier: Path) -> None:
         good = root / "good.zip"
         write_fixture(good)
         run_tool(verifier, "--target-files", good, *kernel_options, check=True)
+        # A build states whether it carries Google's applications; argparse takes the last option.
+        result = run_tool(verifier, "--target-files", good, *kernel_options, "--google-apps", "present")
+        if result.returncode == 0 or "disagree on Google's applications" not in result.stdout:
+            fail(f"an archive without Google's applications verified as one with them: {result.stdout}")
         # A recent aapt2 writes a resource that holds one value as a compact entry.
         compact_good = root / "compact-good.zip"
         write_fixture(compact_good, flip_variant="compact", camera_variant="compact",

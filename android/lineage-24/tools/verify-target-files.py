@@ -28,8 +28,10 @@ import camera_layouts  # noqa: E402
 import default_wallpaper  # noqa: E402
 from release_common import (  # noqa: E402
     BUILD_VARIANTS,
+    GOOGLE_APPS_STATES,
     OTA_CERTIFICATE_ARCHIVES,
     configured_build_variant,
+    configured_google_apps,
     ota_certificate_member,
     sha256_path,
 )
@@ -44,6 +46,9 @@ EXT4_MAGIC = b"\x53\xef"
 # The one APEX whose payload stays ext4: Soong installs the checked-in presigned CTS shim
 # (system/apex/shim/prebuilts), which no product setting recompresses.
 APEX_EXT4_PAYLOADS = frozenset({"SYSTEM/apex/com.android.apex.cts.shim.apex"})
+# Play services, in a private build that carries Google's applications (LINEAGE24_GOOGLE_APPS):
+# a prebuilt whose payload is EROFS as its maker compressed it (LZ4), which the kernel reads.
+GOOGLE_APPS_APEX = "PRODUCT/apex/com.google.android.gmssystem.prodvic.apex"
 # The Mesa Virgl GLES stack: the EGL and GLES libraries the platform loader
 # finds through ro.hardware.egl, and the gallium driver they link. The boot
 # command line's androidboot.hardware.egl must name the same suffix.
@@ -7290,14 +7295,23 @@ def main() -> None:
         help="build variant the target files must carry (default: tracked metadata)",
     )
     parser.add_argument(
+        "--google-apps",
+        choices=GOOGLE_APPS_STATES,
+        help="whether the target files carry Google's applications (default: tracked metadata)",
+    )
+    parser.add_argument(
         "--signed",
         action="store_true",
         help="the target files are the signed archive of a release: check that they trust the "
         "release certificate alone",
     )
     args = parser.parse_args()
-    build_variant = args.build_variant or configured_build_variant(
-        Path(__file__).resolve().parents[1]
+    android_root = Path(__file__).resolve().parents[1]
+    build_variant = args.build_variant or configured_build_variant(android_root)
+    google_apps = (
+        configured_google_apps(android_root)
+        if args.google_apps is None
+        else args.google_apps == "present"
     )
 
     kernel_config = args.kernel_config
@@ -7337,7 +7351,8 @@ def main() -> None:
                 if path.suffix == ".capex":
                     fail(f"compressed APEX is forbidden: {path}")
                 if path.suffix == ".apex":
-                    check_apex_payload_filesystem(archive, info)
+                    if canonical != GOOGLE_APPS_APEX:
+                        check_apex_payload_filesystem(archive, info)
                     apex_count += 1
             if path.name in {"build.prop", "default.prop"}:
                 check_property_file(archive, info)
@@ -7348,6 +7363,11 @@ def main() -> None:
                 elf_count += 1
                 check_target_elf(info, payload)
 
+        if (GOOGLE_APPS_APEX in seen) != google_apps:
+            fail(
+                "the target files and LINEAGE24_GOOGLE_APPS disagree on Google's applications: "
+                f"{GOOGLE_APPS_APEX} is {'present' if GOOGLE_APPS_APEX in seen else 'absent'}"
+            )
         missing = sorted(REQUIRED_ENTRIES - seen)
         if missing:
             fail(f"required entries are missing: {', '.join(missing)}")

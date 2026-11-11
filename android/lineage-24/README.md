@@ -115,6 +115,15 @@ UML implementation. `Build.SOC_MANUFACTURER` and `SOC_MODEL` are `Kernarium` and
   host-captured console, UML's mconsole and tracefs at `/sys/kernel/tracing`
   cover them. Only what these cannot reach needs a `userdebug` build with `su`.
 
+### Google applications
+
+Google's own applications are no part of the product. `LINEAGE24_GOOGLE_APPS`
+in `metadata/lineage.env` is `none` or `present`; `present` is for a private
+build whose builder holds the package tree at `vendor/gapps`, at the Git tree
+the metadata names. Such a build carries Play services, the services framework
+and the Play Store, the build and the target-files verifier follow the setting,
+and its image must never be distributed.
+
 ### Build variants
 
 `LINEAGE24_BUILD_VARIANT` in `metadata/lineage.env` is `user` or `userdebug`;

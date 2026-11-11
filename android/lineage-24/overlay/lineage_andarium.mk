@@ -818,4 +818,35 @@ PRODUCT_PRODUCT_PROPERTIES += \
 PRODUCT_PRODUCT_PROPERTIES += \
     ro.lmk.gpu_reclaim=true
 
+# Google's own applications, in a private build only. They are no part of this
+# product: a builder that holds their package tree at vendor/gapps gets Play
+# services (an APEX), the services framework, the Play Store and the
+# permission lists and framework configuration they need, and nothing else of
+# the package (no Google app, setup wizard, speech or accessibility service).
+# metadata/lineage.env states whether a build has them
+# (LINEAGE24_GOOGLE_APPS), and a release that does must not be published.
+ifneq ($(wildcard vendor/gapps/arm64/arm64-vendor.mk),)
+PRODUCT_SOONG_NAMESPACES += \
+    vendor/gapps/arm64 \
+    vendor/gapps/common \
+    vendor/gapps/overlay
+PRODUCT_PACKAGES += \
+    com.google.android.gmssystem.prodvic \
+    allowed_apex_com.google.android.gmssystem.xml \
+    gms_fsverity_cert.der \
+    GoogleServicesFramework \
+    Phonesky \
+    default-permissions-google.xml \
+    default-permissions-mtg.xml \
+    gapps.rc \
+    google-hiddenapi-package-allowlist.xml \
+    google.xml \
+    privapp-permissions-google-product.xml \
+    privapp-permissions-google-system_ext.xml \
+    privapp-permissions-mtg.xml \
+    sysconfig-mtg.xml \
+    GmsOverlay \
+    GmsSettingsProviderOverlay
+endif
+
 PRODUCT_IGNORE_ALL_ANDROIDMK := true

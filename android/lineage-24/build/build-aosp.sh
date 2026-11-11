@@ -160,6 +160,22 @@ fi
 # shellcheck disable=SC1090
 source "$METADATA"
 
+# Google's own applications: the workspace holds their package exactly when the
+# metadata says so, and then at the tree it names.
+GOOGLE_APPS_TREE="$AOSP_SOURCE/vendor/gapps"
+case "${LINEAGE24_GOOGLE_APPS:-none}" in
+none)
+	[[ ! -e "$GOOGLE_APPS_TREE" ]] ||
+		fail "the workspace holds vendor/gapps, but the metadata states no Google applications"
+	;;
+present)
+	[[ "$(git -C "$GOOGLE_APPS_TREE" rev-parse 'HEAD^{tree}' 2>/dev/null)" == "$LINEAGE24_GOOGLE_APPS_TREE" &&
+		-z "$(git -C "$GOOGLE_APPS_TREE" status --porcelain 2>/dev/null)" ]] ||
+		fail "vendor/gapps is not the clean ${LINEAGE24_GOOGLE_APPS_PACKAGE:-Google applications} tree the metadata names"
+	;;
+*) fail "LINEAGE24_GOOGLE_APPS must be none or present" ;;
+esac
+
 "$MESA_VENUS_VERIFIER" --android-root "$ANDROID_ROOT" \
 	--aosp-source "$AOSP_SOURCE"
 "$ACCESSIBILITY_VERIFIER" --android-root "$ANDROID_ROOT" \

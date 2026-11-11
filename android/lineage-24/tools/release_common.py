@@ -112,6 +112,19 @@ def ota_certificate_member(variant: str, signed: bool) -> str:
     return signed_ota_certificate_member(variant) if signed else OTA_CERTIFICATE_BUILD_MEMBER
 
 
+# Google's own applications are no part of the product. LINEAGE24_GOOGLE_APPS in
+# metadata/lineage.env is "none" for every release that may be distributed; a private build
+# states "present" and carries them as the prebuilts of the package tree it names.
+GOOGLE_APPS_STATES = ("none", "present")
+
+
+def configured_google_apps(android_root: Path) -> bool:
+    state = parse_env(android_root / "metadata/lineage.env").get("LINEAGE24_GOOGLE_APPS", "none")
+    if state not in GOOGLE_APPS_STATES:
+        fail(f"tracked Google applications state is not supported: {state}")
+    return state == "present"
+
+
 def configured_build_variant(android_root: Path) -> str:
     variant = parse_env(android_root / "metadata/lineage.env")["LINEAGE24_BUILD_VARIANT"]
     if variant not in BUILD_VARIANTS:
