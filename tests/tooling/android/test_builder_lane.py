@@ -1905,6 +1905,7 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                           missing_microphone_feature: bool = False,
                           missing_companion_feature: bool = False,
                           missing_midi_feature: bool = False,
+                          google_apps_variant: str | None = None,
                           missing_mic_policy: bool = False,
                           extra_input_device: bool = False,
                           wrong_kernel_config: bool = False,
@@ -3764,6 +3765,9 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                         "config_autoTimeSourcesPriority": ["telephony", "external"],
                     }
                     extra_definitions: list[tuple[str, list[str]]] = []
+                    # A build with Google's applications creates its first user without Bluetooth.
+                    if google_apps_variant in ("present", "no-bluetooth-features"):
+                        extra_definitions.append(("config_defaultFirstUserRestrictions", ["no_bluetooth"]))
                     if network_time_variant == "ntp-server":
                         network_time["config_ntpServers"] = ["ntp://time.android.com"]
                     elif network_time_variant == "ntp-server-in-a-qualified-table":
@@ -3853,6 +3857,13 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                 archive.writestr("VENDOR/bin/hw/android.hardware.vibrator-service.andarium", synthetic_aarch64_elf())
                 archive.writestr(vibrator_rc_path, good_vibrator_rc)
                 archive.writestr("ODM/etc/vintf/manifest_haptics.xml", good_vibrator_manifest)
+                # Play services, and the Bluetooth such a build reports for store filtering.
+                if google_apps_variant is not None:
+                    archive.writestr("PRODUCT/apex/com.google.android.gmssystem.prodvic.apex", b"prebuilt")
+                    if google_apps_variant != "no-bluetooth-features":
+                        for feature in ("android.hardware.bluetooth", "android.hardware.bluetooth_le"):
+                            archive.writestr(f"VENDOR/etc/permissions/{feature}.xml",
+                                             f'<permissions><feature name="{feature}"/></permissions>')
                 archive.writestr("VENDOR/bin/hw/android.hardware.gnss-service.andarium", synthetic_aarch64_elf())
                 archive.writestr(gnss_rc_path, good_gnss_rc)
                 archive.writestr(gnss_fragment_path, good_gnss_manifest)
@@ -4396,6 +4407,22 @@ def verify_target_files_fixtures(verifier: Path) -> None:
         result = run_tool(verifier, "--target-files", good, *kernel_options, "--google-apps", "present")
         if result.returncode == 0 or "disagree on Google's applications" not in result.stdout:
             fail(f"an archive without Google's applications verified as one with them: {result.stdout}")
+        # A build with them reports Bluetooth, which it does not have, and creates its first user
+        # with the restriction that keeps the Bluetooth service off.
+        google_good = root / "google-apps-good.zip"
+        write_fixture(google_good, google_apps_variant="present")
+        run_tool(verifier, "--target-files", google_good, *kernel_options, "--google-apps", "present",
+                 check=True)
+        for variant, cause in (
+            ("no-bluetooth-features", "required feature is not declared: android.hardware.bluetooth"),
+            ("no-restriction", "config_defaultFirstUserRestrictions lacks no_bluetooth"),
+        ):
+            fixture = root / f"google-apps-{variant}.zip"
+            write_fixture(fixture, google_apps_variant=variant)
+            result = run_tool(verifier, "--target-files", fixture, *kernel_options,
+                              "--google-apps", "present")
+            if result.returncode == 0 or cause not in result.stdout:
+                fail(f"a build with Google's applications verified with {variant}: {result.stdout}")
         # A recent aapt2 writes a resource that holds one value as a compact entry.
         compact_good = root / "compact-good.zip"
         write_fixture(compact_good, flip_variant="compact", camera_variant="compact",
@@ -4705,6 +4732,12 @@ def verify_target_files_fixtures(verifier: Path) -> None:
             ("missing-microphone-feature", {"missing_microphone_feature": True}),
             ("missing-companion-feature", {"missing_companion_feature": True}),
             ("missing-midi-feature", {"missing_midi_feature": True}),
+            ("bluetooth-reported-without-google-apps", {"entries": {
+                "VENDOR/etc/permissions/android.hardware.bluetooth.xml":
+                    b'<permissions><feature name="android.hardware.bluetooth"/></permissions>'}}),
+            ("bluetooth-le-reported-without-google-apps", {"entries": {
+                "VENDOR/etc/permissions/android.hardware.bluetooth_le.xml":
+                    b'<permissions><feature name="android.hardware.bluetooth_le"/></permissions>'}}),
             ("missing-mic-policy", {"missing_mic_policy": True}),
             ("extra-input-device", {"extra_input_device": True}),
             ("kernel-config", {"wrong_kernel_config": True}),
@@ -6332,6 +6365,11 @@ def verify_target_files_fixtures(verifier: Path) -> None:
              "feature is not declared: android.hardware.microphone"),
             ("missing-companion-feature-cause", {"missing_companion_feature": True},
              "feature is not declared: android.software.companion_device_setup"),
+            ("bluetooth-reported-without-google-apps-cause", {"entries": {
+                "VENDOR/etc/permissions/android.hardware.bluetooth.xml":
+                    b'<permissions><feature name="android.hardware.bluetooth"/></permissions>'}},
+             "absent hardware feature declaration is forbidden: "
+             "VENDOR/etc/permissions/android.hardware.bluetooth.xml"),
             ("missing-midi-feature-cause", {"missing_midi_feature": True},
              "feature is not declared: android.software.midi"),
             ("camera-feature-cause", {"unsupported_feature": True},

@@ -847,6 +847,18 @@ PRODUCT_PACKAGES += \
     sysconfig-mtg.xml \
     GmsOverlay \
     GmsSettingsProviderOverlay
+
+# The Play Store hides an application whose manifest requires Bluetooth from a
+# device that does not report it. Such a build reports the two features so the
+# store shows those applications, and still has no Bluetooth: there is no HAL,
+# and overlay-google-apps keeps the Bluetooth service, which the feature
+# starts, from ever turning the adapter on.
+KERNARIUM_REPORTED_BLUETOOTH := \
+    frameworks/native/data/etc/android.hardware.bluetooth.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth.xml \
+    frameworks/native/data/etc/android.hardware.bluetooth_le.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth_le.xml
+PRODUCT_COPY_FILES_EXCLUDE := $(filter-out $(KERNARIUM_REPORTED_BLUETOOTH),$(PRODUCT_COPY_FILES_EXCLUDE))
+PRODUCT_COPY_FILES += $(KERNARIUM_REPORTED_BLUETOOTH)
+PRODUCT_PACKAGE_OVERLAYS += device/kernarium/andarium/overlay-google-apps
 endif
 
 PRODUCT_IGNORE_ALL_ANDROIDMK := true
