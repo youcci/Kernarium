@@ -1,0 +1,65 @@
+Andarium/Andarium/Live/LiveRuntime.swift
+  s_83f5d907de3616::t_f1252e3c463d45 62,538,541,544
+android/lineage-24/overlay/hostlink/host_link.hpp
+  s_83f5d907de3616::t_3edfc12fa4098d 1-127
+tests/tooling/android/test_builder_lane.py
+  s_83f5d907de3616::t_1a586dfc257e3b 2238-2245,2836-2842,5988
+android/lineage-24/overlay/vibrator/Android.bp
+  s_83f5d907de3616::t_3edfc12fa4098d 1-19
+Andarium/README.md
+  s_83f5d907de3616::t_f1252e3c463d45 256-259
+android/lineage-24/overlay/hostlink/Android.bp
+  s_83f5d907de3616::t_3edfc12fa4098d 1-9
+Andarium/AndariumCore/Sources/AndariumCore/Vibration.swift
+  s_83f5d907de3616::t_110f16cdd63cba 1-49
+android/lineage-24/overlay/vibrator/android.hardware.vibrator-service.andarium.rc
+  s_83f5d907de3616::t_3edfc12fa4098d 1-5
+android/lineage-24/build/build-aosp.sh
+  s_83f5d907de3616::t_1a586dfc257e3b 402-403
+tests/unit/andarium/vibration_protocol_tests.cpp
+  s_83f5d907de3616::t_a75d4ac4de98b4 1-17
+android/lineage-24/overlay/vibrator/vibration_protocol.hpp
+  s_83f5d907de3616::t_3edfc12fa4098d 1-25
+Andarium/AndariumCore/Sources/AndariumCore/GuestFrameStream.swift
+  s_83f5d907de3616::t_110f16cdd63cba 1-162
+android/lineage-24/overlay/vibrator/Vibrator.cpp
+  s_83f5d907de3616::t_3edfc12fa4098d 1-132
+android/lineage-24/README.md
+  s_83f5d907de3616::t_8844cfc2a4e9b7 163-172
+  s_83f5d907de3616::t_1a586dfc257e3b 86
+  s_83f5d907de3616::t_a31c9614a20cd1 173
+android/lineage-24/tools/verify-target-files.py
+  s_83f5d907de3616::t_1a586dfc257e3b 215-217,2612-2643,4403
+tests/unit/andarium/CMakeLists.txt
+  s_83f5d907de3616::t_a75d4ac4de98b4 18-23
+android/lineage-24/overlay/vibrator/android.hardware.vibrator-service.andarium.xml
+  s_83f5d907de3616::t_3edfc12fa4098d 1-9
+android/lineage-24/overlay/lineage_andarium.mk
+  s_83f5d907de3616::t_1a586dfc257e3b 124-128
+Andarium/AndariumCore/Tests/AndariumCoreTests/VibrationTests.swift
+  s_83f5d907de3616::t_110f16cdd63cba 1-134
+docs/testing.md
+  s_83f5d907de3616::t_a75d4ac4de98b4 283-286
+Andarium/Andarium/Live/GuestHaptics.swift
+  s_83f5d907de3616::t_f1252e3c463d45 1-92
+android/lineage-24/overlay/sepolicy/vendor/file_contexts
+  s_83f5d907de3616::t_ac37b8d5bb1ae4 26-29
+android/lineage-24/overlay/sepolicy/vendor/hal_vibrator_default.te
+  s_83f5d907de3616::t_c2ec64d91355d6 1-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5d3ba6c15cee362cfb1a03b42ba4088e50f82db7",
+  "prompts": {},
+  "sessions": {
+    "s_83f5d907de3616": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a5ab82a9-5d39-4921-8909-98778519fb84",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
