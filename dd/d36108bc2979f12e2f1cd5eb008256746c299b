@@ -1,0 +1,22 @@
+darwin/cpu/arm64/jit/jit_cache_geometry.cpp
+  s_a16f104b1ec06c::t_2a25d20f949341 4,199-206
+tests/unit/arm64/arm64_jit_cache_geometry_tests.cpp
+  s_a16f104b1ec06c::t_73505a68278ba0 143-162,164-169,404
+  s_a16f104b1ec06c::t_2cfd228c2126df 7,163
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ddd36108bc2979f12e2f1cd5eb008256746c299b",
+  "prompts": {},
+  "sessions": {
+    "s_a16f104b1ec06c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "af5893c4-3ef0-4641-a6c7-1c1413188116",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
