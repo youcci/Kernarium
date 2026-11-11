@@ -40,7 +40,7 @@ private struct PendingRun {
 @MainActor
 final class LiveRuntime: RuntimeDriver {
     /// The loader's flavour for the Android runtime.
-    private static let androidFlavor: UInt32 = 1
+    static let androidFlavor: UInt32 = 1
     /// Android's power key held this long raises its power menu.
     nonisolated private static let powerMenuHold = 0.8
 

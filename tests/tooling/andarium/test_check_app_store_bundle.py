@@ -59,6 +59,8 @@ DEBUG_SUPPORT = (
     ("automation", 'const char *fixture(void) { return "removed the boot payload"; }\n'),
     ("test tooling", "int _rfbGetScreen(void) { return 1; }\n"),
     ("launch harness", "int _s8Andarium8AppEntryV13applyDeferred2toyyF(void) { return 1; }\n"),
+    ("debugger JIT", "int kernarium_runtime_claim_debugger_jit_memory(void) { return 1; }\n"),
+    ("debugger JIT", 'const char *fixture(void) { return "stikdebug"; }\n'),
 )
 # What an App Store runtime keeps so that the runtime API table's layout and
 # version stay: its entries answer -ENOTSUP, and a virtual Jetsam that never

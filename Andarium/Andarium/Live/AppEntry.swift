@@ -165,6 +165,9 @@ struct AppEntry {
     /// when asked, and starts it; a normal launch stops at Home.
     @MainActor
     func applyDeferred(to model: AppModel) async {
+        #if !targetEnvironment(simulator)
+        Self.requestJitMemory()
+        #endif
         let launch = overrides
         guard launch.start != nil || launch.erase else { return }
         if model.guest == nil {
@@ -185,6 +188,32 @@ struct AppEntry {
             model.start(mode)
         }
     }
+
+    #if !targetEnvironment(simulator)
+    /// Asks StikDebug to attach a debugger, from which the runtime takes the
+    /// JIT engine's memory. Where StikDebug is not installed nothing opens,
+    /// and the guest runs on the gadget engine.
+    @MainActor
+    private static func requestJitMemory() {
+        guard kernarium_runtime_loader_select(LiveRuntime.androidFlavor) == 0 else { return }
+        // The runtime waits on this thread, and first sees that no debugger
+        // is attached yet: one that already is was not asked for here.
+        Thread.detachNewThread { _ = kernarium_runtime_loader_claim_debugger_jit_memory() }
+        var request = URLComponents()
+        request.scheme = "stikdebug"
+        request.host = "enable-jit"
+        request.queryItems = [
+            URLQueryItem(name: "bundle-id", value: Bundle.main.bundleIdentifier),
+            URLQueryItem(name: "pid", value: String(getpid())),
+            URLQueryItem(name: "script-name", value: "universal.js"),
+        ]
+        guard let url = request.url else { return }
+        // Only an active application may open another.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            UIApplication.shared.open(url)
+        }
+    }
+    #endif
 
     /// A new guest as the launch asks for it, within the carried system's data
     /// disk.

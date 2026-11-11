@@ -216,6 +216,11 @@ int kernarium_runtime_loader_automation_job_at_start(void);
  * edge itself. Always zero for a release runtime, which cannot be asked, and
  * when none is loaded. */
 int kernarium_runtime_loader_automation_hold_delay_ms(void);
+/* The selected runtime's route to the JIT engine on an iPhone
+ * (kernarium_runtime_claim_debugger_jit_memory): call it on a thread of its
+ * own, then ask StikDebug to attach. Zero when the runtime has no such route,
+ * when none is loaded, and when no debugger came. */
+int kernarium_runtime_loader_claim_debugger_jit_memory(void);
 int kernarium_runtime_loader_send_console_input(
     const void* buffer,
     size_t length);

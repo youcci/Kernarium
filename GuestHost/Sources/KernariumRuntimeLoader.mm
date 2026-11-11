@@ -28,6 +28,8 @@ bool selectionAttempted;
  * a release runtime does not export them. */
 int (*automationJobAtStart)(void);
 int (*automationHoldDelayMs)(void);
+/* The selected runtime's route to JIT memory, or null. */
+int (*claimDebuggerJitMemory)(void);
 #endif
 /* The runtime relay can still call into the loader while exit() destroys
  * ordinary statics. Keep its lock and retained handler alive together. */
@@ -296,6 +298,9 @@ __attribute__((constructor)) void isolateGuestTimerFromApplicationThreads()
     (void)dlerror();
     automationHoldDelayMs = reinterpret_cast<int (*)(void)>(
         dlsym(handle, "kernarium_runtime_automation_hold_delay_ms"));
+    (void)dlerror();
+    claimDebuggerJitMemory = reinterpret_cast<int (*)(void)>(
+        dlsym(handle, "kernarium_runtime_claim_debugger_jit_memory"));
     (void)dlerror();
 #endif
     selectedFlavor = guestFlavor;
@@ -675,6 +680,13 @@ extern "C" int kernarium_runtime_loader_automation_job_at_start(void)
 {
     return api() != nullptr && automationJobAtStart != nullptr
         ? automationJobAtStart()
+        : 0;
+}
+
+extern "C" int kernarium_runtime_loader_claim_debugger_jit_memory(void)
+{
+    return api() != nullptr && claimDebuggerJitMemory != nullptr
+        ? claimDebuggerJitMemory()
         : 0;
 }
 

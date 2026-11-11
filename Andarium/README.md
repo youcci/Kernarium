@@ -125,7 +125,10 @@ everything that exists for automation or only pretends:
   environment (`Live/LaunchEnvironment.swift`, so no `ANDARIUM_` or
   `KERNARIUM_` name is in the application or in `AndariumCore`), the harness's
   console lines (`Shared/ConsoleReport.swift`), the launch's deferred work
-  (create, erase, start) and the isolated guest instance.
+  (create, erase, start), the isolated guest instance, and the request a
+  development build on a device makes of StikDebug at launch, whose debugger
+  gives the runtime the JIT engine's memory
+  ([executable code](../docs/architecture.md#executable-code)).
 - It defines `UML_APP_STORE_APPLICATION` for the loader it compiles, which
   leaves out the display mirror, console input and the automation lookups
   ([`GuestHost/README.md`](../GuestHost/README.md)).

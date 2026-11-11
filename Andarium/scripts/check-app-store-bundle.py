@@ -16,8 +16,8 @@ application that must:
   - carry no debugging or automation support in the host code of the
     application or of a framework: the frame mirror, console input, the
     guest sampler, the footprint log, the virtual Jetsam, the activity logs,
-    the census and histogram, the automation entries and the harness's
-    leftovers (DEBUG_SYMBOLS and DEBUG_STRINGS name them; the stand-ins that
+    the census and histogram, the automation entries, the debugger's route
+    to JIT memory and the harness's leftovers (DEBUG_SYMBOLS and DEBUG_STRINGS name them; the stand-ins that
     keep the runtime API's layout, runtimeSetFrameSink and
     runtimeSendConsoleInput, are allowed), and contain no test bundle and no
     XCTest or Testing framework;
@@ -288,6 +288,8 @@ DEBUG_SYMBOLS = (
                       b"_rfbInitServer")),
     ("launch harness", (b"13ConsoleReport", b"15environmentName", b"13applyDeferred",
                         b"16printsStatistics", b"13launchApplied")),
+    ("debugger JIT", (b"claim_debugger_jit_memory", b"claim_from_debugger",
+                      b"16requestJitMemory")),
 )
 DEBUG_STRINGS = (
     ("frame mirror", (b"uml-frame-tap",)),
@@ -298,6 +300,7 @@ DEBUG_STRINGS = (
     ("automation", (b"kernarium_runtime_automation_", b"automation boot with",
                     b"ADB authorization is off", b"removed the boot payload")),
     ("remote framebuffer", (b"RFB 003.00",)),
+    ("debugger JIT", (b"stikdebug", b"gave this process JIT memory")),
 )
 # What runs tests: a test bundle, and the frameworks and libraries that load it
 # (XCTest, XCUIAutomation and the rest, Swift Testing). They are in an
