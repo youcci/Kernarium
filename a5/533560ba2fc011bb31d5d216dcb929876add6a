@@ -1,0 +1,36 @@
+Andarium/README.md
+  s_a16f104b1ec06c::t_dc25f663b17b32 129
+Andarium/Andarium/Live/AppEntry.swift
+  s_a16f104b1ec06c::t_dc25f663b17b32 168,170,194-196
+docs/testing.md
+  s_a16f104b1ec06c::t_dc25f663b17b32 452
+Andarium/AndariumCore/Sources/AndariumCore/Launch.swift
+  s_a16f104b1ec06c::t_dc25f663b17b32 25-27,42-43,76
+Andarium/AndariumCore/Tests/AndariumCoreTests/LaunchAndPauseTests.swift
+  s_a16f104b1ec06c::t_dc25f663b17b32 136-141
+darwin/cpu/arm64/jit/README.md
+  s_a16f104b1ec06c::t_dc25f663b17b32 5
+docs/architecture.md
+  s_a16f104b1ec06c::t_dc25f663b17b32 180-181,186-187,189-190
+  s_a16f104b1ec06c::t_cd3bb7b22c9ba0 188
+docs/optimization-history.md
+  s_a16f104b1ec06c::t_936cf7e0ea23c6 288
+Andarium/Andarium/Live/LaunchEnvironment.swift
+  s_a16f104b1ec06c::t_dc25f663b17b32 24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a5533560ba2fc011bb31d5d216dcb929876add6a",
+  "prompts": {},
+  "sessions": {
+    "s_a16f104b1ec06c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "af5893c4-3ef0-4641-a6c7-1c1413188116",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
