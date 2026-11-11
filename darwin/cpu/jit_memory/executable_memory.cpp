@@ -8,6 +8,7 @@
 #include <mach/mach.h>
 #include <os/lock.h>
 #include <pthread.h>
+#include <signal.h>
 #include <unistd.h>
 
 #include <array>
@@ -102,6 +103,23 @@ constexpr unsigned debugger_wait_seconds = 120;
 	__asm__("mov x16, #0\n"
 		"brk #0xf00d\n"
 		"ret\n");
+}
+
+/* A breakpoint no debugger answers raises SIGTRAP, which ends the process: a
+ * debugger that attached may be gone again, or run no script. While the claim
+ * makes its two calls this handler answers in the debugger's place: it steps
+ * over the breakpoint with a null answer, so the claim fails and the process
+ * runs on. Any other trap takes the default action. */
+void answer_unanswered_breakpoint(int, siginfo_t *, void *context)
+{
+	constexpr std::uint32_t breakpoint = 0xd43e01a0U; /* brk #0xf00d */
+	auto &state = static_cast<ucontext_t *>(context)->uc_mcontext->__ss;
+	if (*reinterpret_cast<const std::uint32_t *>(state.__pc) != breakpoint) {
+		(void)signal(SIGTRAP, SIG_DFL);
+		return;
+	}
+	state.__x[0] = 0;
+	state.__pc += 4;
 }
 
 /* A writable mapping of the size bytes at code, or nullptr. */
@@ -248,6 +266,12 @@ public:
 				return false;
 			(void)usleep(250000);
 		}
+		struct sigaction answer{};
+		struct sigaction previous{};
+		answer.sa_sigaction = &answer_unanswered_breakpoint;
+		answer.sa_flags = SA_SIGINFO;
+		(void)sigemptyset(&answer.sa_mask);
+		(void)sigaction(SIGTRAP, &answer, &previous);
 		/* The debugger leaves at once: while it is attached every
 		 * signal of the process waits for it to answer. */
 		void *const code =
@@ -255,6 +279,7 @@ public:
 		void *const alias = code == nullptr ? nullptr :
 			writable_alias(code, debugger_window_bytes);
 		debugger_detach();
+		(void)sigaction(SIGTRAP, &previous, nullptr);
 		if (alias == nullptr)
 			return false;
 		os_unfair_lock_lock(&lock_);
