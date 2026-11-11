@@ -1,0 +1,56 @@
+tests/unit/andarium/camera_protocol_tests.cpp
+  s_83f5d907de3616::t_1f1eb555205e8c 1-93
+tests/tooling/android/test_builder_lane.py
+  s_83f5d907de3616::t_170455647e372a 759,2273-2293,2317,2918-2927,4368-4370,6103
+android/lineage-24/patches/projects.tsv
+  s_83f5d907de3616::t_3da52f831080a2 29
+android/lineage-24/build/build-aosp.sh
+  s_83f5d907de3616::t_170455647e372a 406-407
+android/lineage-24/patches/projects/p0029/series/series.tsv
+  s_83f5d907de3616::t_3da52f831080a2 1-4
+android/lineage-24/overlay/camera/Android.bp
+  s_83f5d907de3616::t_25d5cb2dbe6ac2 1-4,8-21
+  s_83f5d907de3616::t_b5940f6ad3bc7b 5-7
+android/lineage-24/overlay/camera/HostCamera.cpp
+  s_83f5d907de3616::t_1e38bfb5f0b830 1-243
+android/lineage-24/overlay/lineage_andarium.mk
+  s_83f5d907de3616::t_34877e27620c62 20-22,79-80,141-152,749
+android/lineage-24/overlay/camera/android.hardware.camera.provider-service.andarium.rc
+  s_83f5d907de3616::t_25d5cb2dbe6ac2 1-8
+android/lineage-24/tools/verify-target-files.py
+  s_83f5d907de3616::t_170455647e372a 51,239-241,556-557,559-562,2673,2682,2684,2690,2710-2717,4487
+android/lineage-24/patches/projects/p0029/series/goldfish-offer-the-camera-provider-as-a-library.patch
+  s_83f5d907de3616::t_3da52f831080a2 1-89
+tests/unit/andarium/CMakeLists.txt
+  s_83f5d907de3616::t_1f1eb555205e8c 30-35
+android/lineage-24/overlay/camera/camera_protocol.hpp
+  s_83f5d907de3616::t_25d5cb2dbe6ac2 1-78
+android/lineage-24/README.md
+  s_83f5d907de3616::t_171fbf42bc0ecf 85,101-104,192-206
+  s_83f5d907de3616::t_fab5b45f69d2b2 207
+android/lineage-24/overlay/camera/android.hardware.camera.provider-service.andarium.xml
+  s_83f5d907de3616::t_1e38bfb5f0b830 7
+  s_83f5d907de3616::t_25d5cb2dbe6ac2 1-6,8-9
+android/lineage-24/overlay/sepolicy/vendor/file_contexts
+  s_83f5d907de3616::t_47e40b16ba71dd 33-36
+android/lineage-24/overlay/sepolicy/vendor/hal_camera_default.te
+  s_83f5d907de3616::t_38f6656acd0870 1-8
+android/lineage-24/overlay/sepolicy/vendor/service_contexts
+  s_83f5d907de3616::t_9b9cefed39bd9b 1-4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "83fbfb4cb15e9935d5f03f399b02d6610110205f",
+  "prompts": {},
+  "sessions": {
+    "s_83f5d907de3616": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a5ab82a9-5d39-4921-8909-98778519fb84",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
