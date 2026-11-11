@@ -82,7 +82,7 @@ UML implementation. `Build.SOC_MANUFACTURER` and `SOC_MODEL` are `Kernarium` and
   entry, the Bluetooth developer option, the media output switcher, and the
   hearing, Bluetooth pairing, telephony, biometric and USB pages) and hides the
   Wi-Fi hotspot, wireless display and System update pages.
-- **Hardware not advertised.** Telephony, NFC, UWB, Thread, camera, biometric,
+- **Hardware not advertised.** Telephony, NFC, UWB, Thread, biometric,
   secure element, USB, Bluetooth and Trusty. SecureElement
   is kept but not persistent (route `p0024`): nothing starts it at boot, and the
   first `SEService` client that binds it starts it.
@@ -98,11 +98,10 @@ build whose builder holds the package tree at `vendor/gapps`, at the Git tree
 the metadata names. Such a build carries Play services, the services framework
 and the Play Store, the build and the target-files verifier follow the setting,
 and its image must never be distributed. It also reports Bluetooth, Bluetooth
-Low Energy, a camera with autofocus and telephony, so the Play Store shows
-applications that require them, and has none of them: its first user is
-created with the `no_bluetooth` restriction, the camera service lists no
-camera, and the framework is configured as a device without voice, messages or
-mobile data.
+Low Energy and telephony, so the Play Store shows applications that require
+them, and has none of them: its first user is created with the `no_bluetooth`
+restriction, and the framework is configured as a device without voice,
+messages or mobile data.
 
 ### Build variants
 
@@ -189,6 +188,22 @@ measurements or NMEA and offers no extension. `overlay/gnss/location_protocol.hp
 and `Andarium/AndariumCore/Sources/AndariumCore/GuestLocation.swift` own the
 wire format. The product declares `android.hardware.location` and
 `android.hardware.location.gps`.
+
+### Camera
+
+The camera provider (`overlay/camera/`) is goldfish's AIDL provider, which route
+`p0029` builds as a library, with the product's source of pictures: a back
+camera (id 0) and a front camera (id 1) that are the host's. It accepts a
+single connection on vsock port 5559 from host CID 2, tells the host which
+camera Android has open, and asks it for each picture. Every stream is 640x480
+at up to 15 pictures a second, 4:2:0 for preview, analysis and video and JPEG
+for stills, which the provider compresses; there is no raw stream, flash or
+torch, and the product carries no camera application.
+`overlay/camera/camera_protocol.hpp` and
+`Andarium/AndariumCore/Sources/AndariumCore/GuestCamera.swift` own the wire
+format. The product declares `android.hardware.camera`, `.camera.autofocus` and
+`.camera.front`. A request the host does not answer fails its buffers and
+leaves the camera open.
 
 ### Networking
 

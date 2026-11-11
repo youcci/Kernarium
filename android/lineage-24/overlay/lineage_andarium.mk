@@ -17,9 +17,9 @@
 
 # Select the UML-safe branches in the inherited Cuttlefish product before it
 # is evaluated. The Darwin machine has no nested Trusty VM, modem, NFC,
-# Bluetooth, biometric, secure-element, or camera transport, its Wi-Fi is the
-# kernel's virtual one (kernarium_net_setup), and its GNSS HAL is the product's
-# own (gnss/), not Cuttlefish's.
+# Bluetooth, biometric, or secure-element transport, its Wi-Fi is the kernel's
+# virtual one (kernarium_net_setup), and its GNSS HAL and camera provider are
+# the product's own (gnss/, camera/), not Cuttlefish's.
 TRUSTY_SYSTEM_VM := disabled
 UML_ANDROID_SECURITY_HALS := nonsecure
 UML_ANDROID_BUILTIN_KERNEL := true
@@ -76,7 +76,8 @@ TARGET_DEDICATED_RECOVERY := true
 TARGET_NO_RECOVERY := false
 
 # LineageOS switches, read while its configuration is inherited below. The
-# machine has no camera, no charger or fastboot transport, and no hardware to
+# product carries no camera application, the machine has no charger or
+# fastboot transport and no hardware to
 # apply effects to, so the matching defaults of the LineageOS product chain stay
 # out. Its microphone is the Virtio sound capture stream (config/
 # primary_audio_policy_configuration.xml, config/kernarium_core_hardware.xml). Debug builds carry `su` for the
@@ -136,6 +137,18 @@ PRODUCT_PACKAGES += android.hardware.vibrator-service.andarium
 PRODUCT_PACKAGES += android.hardware.gnss-service.andarium
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.location.gps.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.location.gps.xml
+
+# Android's cameras are the host's (camera/): goldfish's camera provider with
+# the product's own source of pictures, which asks the host for each one on a
+# private vsock connection while Android has a camera open. The provider links
+# the library the goldfish route (p0029) adds, from a namespace that imports
+# goldfish's. The feature files declare a back camera with autofocus and a
+# front camera.
+PRODUCT_SOONG_NAMESPACES += device/kernarium/andarium/camera
+PRODUCT_PACKAGES += android.hardware.camera.provider-service.andarium
+PRODUCT_COPY_FILES += \
+    frameworks/native/data/etc/android.hardware.camera.autofocus.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.autofocus.xml \
+    frameworks/native/data/etc/android.hardware.camera.front.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.front.xml
 
 PRODUCT_NAME := lineage_andarium
 PRODUCT_DEVICE := andarium
@@ -392,7 +405,6 @@ PRODUCT_COPY_FILES_EXCLUDE += \
     frameworks/native/data/etc/android.hardware.fingerprint.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.fingerprint.xml \
     frameworks/native/data/etc/android.hardware.camera.concurrent.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.concurrent.xml \
     frameworks/native/data/etc/android.hardware.camera.flash-autofocus.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.flash-autofocus.xml \
-    frameworks/native/data/etc/android.hardware.camera.front.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.front.xml \
     frameworks/native/data/etc/android.hardware.camera.full.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.full.xml \
     frameworks/native/data/etc/android.hardware.camera.raw.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.raw.xml \
     frameworks/native/data/etc/android.hardware.consumerir.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.consumerir.xml \
@@ -734,11 +746,7 @@ PRODUCT_COPY_FILES_EXCLUDE := $(filter-out $(KERNARIUM_REPORTED_BLUETOOTH),$(PRO
 PRODUCT_COPY_FILES_EXCLUDE += \
     device/google/cuttlefish/shared/bluetooth/excluded_hardware.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/bluetooth_excluded_hardware.xml
 PRODUCT_COPY_FILES += $(KERNARIUM_REPORTED_BLUETOOTH)
-# The same holds for a camera, which the CAMERA permission makes an application
-# require together with autofocus. The camera service runs and lists none.
-PRODUCT_COPY_FILES += \
-    frameworks/native/data/etc/android.hardware.camera.autofocus.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.autofocus.xml
-# And for telephony, which a permission to call or to read the phone's number
+# The same holds for telephony, which a permission to call or to read the phone's number
 # makes an application require. There is no phone stack, and overlay-google-apps
 # states a device without voice, messages or mobile data, whose time zone
 # does not wait for a network operator.

@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+# The camera provider asks the host for its pictures on vsock, like the motion
+# sub-HAL beside it. It accepts only host CID 2, writes its requests to the
+# accepted connection and shuts it down when one cannot be sent whole.
+typeattribute hal_camera_default unconstrained_vsock_violators;
+allow hal_camera_default self:vsock_socket { create bind listen accept read write shutdown getattr getopt };
+# Its capture thread raises its own priority, as goldfish's provider does.
+allow hal_camera_default self:global_capability_class_set sys_nice;

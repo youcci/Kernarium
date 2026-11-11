@@ -48,15 +48,11 @@ GOOGLE_APPS_APEX = "PRODUCT/apex/com.google.android.gmssystem.prodvic.apex"
 # applications that require it. The feature makes system_server start the Bluetooth service, and
 # without a HAL the Bluetooth process aborts whenever the adapter is turned on, so the first user
 # is created with the restriction under which the service never does.
-# It reports a camera with autofocus for the same reason; the camera service lists none. And
-# telephony, the base feature alone, without a phone stack.
+# It reports telephony for the same reason, the base feature alone, without a phone stack.
 GOOGLE_APPS_FEATURE_NAMES = frozenset(
     {
         "android.hardware.bluetooth",
         "android.hardware.bluetooth_le",
-        "android.hardware.camera",
-        "android.hardware.camera.any",
-        "android.hardware.camera.autofocus",
         "android.hardware.telephony",
     }
 )
@@ -240,6 +236,9 @@ REQUIRED_ENTRIES = {
     "VENDOR/bin/hw/android.hardware.gnss-service.andarium",
     "VENDOR/etc/init/android.hardware.gnss-service.andarium.rc",
     "VENDOR/etc/vintf/manifest/android.hardware.gnss-service.andarium.xml",
+    "VENDOR/bin/hw/android.hardware.camera.provider-service.andarium",
+    "VENDOR/etc/init/android.hardware.camera.provider-service.andarium.rc",
+    "VENDOR/etc/vintf/manifest/android.hardware.camera.provider-service.andarium.xml",
 
     "BOOT/kernel",
     "INIT_BOOT/RAMDISK/init",
@@ -526,7 +525,6 @@ FORBIDDEN_FEATURE_DECLARATIONS = {
     "android.hardware.bluetooth_le.xml",
     "android.hardware.camera.concurrent.xml",
     "android.hardware.camera.flash-autofocus.xml",
-    "android.hardware.camera.front.xml",
     "android.hardware.camera.full.xml",
     "android.hardware.camera.raw.xml",
     "android.hardware.ethernet.xml",
@@ -555,7 +553,13 @@ FORBIDDEN_FEATURE_DECLARATIONS = {
 # handheld declaration of the platform carries, and applications call
 # MidiManager without a null check. Virtual MIDI devices (MidiDeviceService)
 # need no hardware transport, so the declaration adds no USB or Bluetooth MIDI.
+# The cameras are the host's back and front ones; the host focuses by itself, and its
+# torch is not Android's to light.
 REQUIRED_FEATURE_NAMES = {
+    "android.hardware.camera",
+    "android.hardware.camera.any",
+    "android.hardware.camera.autofocus",
+    "android.hardware.camera.front",
     "android.hardware.touchscreen",
     "android.hardware.touchscreen.multitouch",
     "android.hardware.touchscreen.multitouch.distinct",
@@ -575,11 +579,7 @@ REQUIRED_FEATURE_NAMES = {
 FORBIDDEN_FEATURE_NAMES = {
     "android.hardware.bluetooth",
     "android.hardware.bluetooth_le",
-    "android.hardware.camera",
-    "android.hardware.camera.any",
-    "android.hardware.camera.autofocus",
     "android.hardware.camera.flash",
-    "android.hardware.camera.front",
     "android.hardware.context_hub",
     "android.hardware.ethernet",
     "android.hardware.fingerprint",
@@ -2670,7 +2670,7 @@ def check_motion_sensors(archive: zipfile.ZipFile, infos: dict[str, zipfile.ZipI
 
 def check_host_hal(
     archive: zipfile.ZipFile, infos: dict[str, zipfile.ZipInfo], service: str, interface: str,
-    instance: str, what: str,
+    instance: str, what: str, name: str = "default",
 ) -> None:
     """A HAL of this product that the host backs: its VINTF fragment declares the AIDL instance
     and its init script starts the binary, both installed under the service's name."""
@@ -2679,15 +2679,15 @@ def check_host_hal(
         hal.get("format") == "aidl"
         and hal.findtext("name") == interface
         and (
-            hal.findtext("fqname") == f"{instance}/default"
+            hal.findtext("fqname") == f"{instance}/{name}"
             or any(
-                entry.findtext("name") == instance and entry.findtext("instance") == "default"
+                entry.findtext("name") == instance and entry.findtext("instance") == name
                 for entry in hal.findall("interface")
             )
         )
         for hal in fragment.findall("hal")
     ):
-        fail(f"{what} HAL is not declared as AIDL {instance}/default")
+        fail(f"{what} HAL is not declared as AIDL {instance}/{name}")
     script = read_small(archive, infos[f"VENDOR/etc/init/{service}.rc"]).decode()
     if not re.search(rf"^service \S+ /vendor/bin/hw/{re.escape(service)}$", script, re.M):
         fail(f"{what} HAL service does not start the Andarium binary")
@@ -2704,6 +2704,14 @@ def check_gnss(archive: zipfile.ZipFile, infos: dict[str, zipfile.ZipInfo]) -> N
     check_host_hal(
         archive, infos, "android.hardware.gnss-service.andarium",
         "android.hardware.gnss", "IGnss", "GNSS",
+    )
+
+
+def check_camera(archive: zipfile.ZipFile, infos: dict[str, zipfile.ZipInfo]) -> None:
+    # The camera service takes a provider's kind and number from its instance name.
+    check_host_hal(
+        archive, infos, "android.hardware.camera.provider-service.andarium",
+        "android.hardware.camera.provider", "ICameraProvider", "camera", "internal/1",
     )
 
 
@@ -4476,6 +4484,7 @@ def main() -> None:
         check_motion_sensors(archive, infos)
         check_vibrator(archive, infos)
         check_gnss(archive, infos)
+        check_camera(archive, infos)
         check_discrete_ops(archive, infos)
         check_default_wallpaper(archive, infos)
         check_no_statistics_uploader(archive, infos)

@@ -756,6 +756,7 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                           context_hub: bool = False,
                           unsupported_hal: bool = False,
                           unsupported_feature: bool = False,
+                          missing_camera_feature: bool = False,
                           missing_multitouch_feature: str | None = None,
                           missing_microphone_feature: bool = False,
                           missing_companion_feature: bool = False,
@@ -2255,12 +2256,6 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                 if google_apps_variant is not None:
                     archive.writestr("PRODUCT/apex/com.google.android.gmssystem.prodvic.apex", b"prebuilt")
                     archive.writestr(
-                        "VENDOR/etc/permissions/android.hardware.camera.autofocus.xml",
-                        "<permissions>" + "".join(
-                            f'<feature name="android.hardware.camera{suffix}"/>'
-                            for suffix in ("", ".any", ".autofocus")
-                        ) + "</permissions>")
-                    archive.writestr(
                         "VENDOR/etc/permissions/android.hardware.telephony.xml",
                         '<permissions><feature name="android.hardware.telephony"/></permissions>')
                     if google_apps_variant != "no-bluetooth-features":
@@ -2275,6 +2270,27 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                                  '<manifest version="1.0" type="device"><hal format="aidl">'
                                  '<name>android.hardware.gnss</name><version>7</version>'
                                  '<fqname>IGnss/default</fqname></hal></manifest>')
+                archive.writestr("VENDOR/bin/hw/android.hardware.camera.provider-service.andarium",
+                                 synthetic_aarch64_elf())
+                archive.writestr("VENDOR/etc/init/android.hardware.camera.provider-service.andarium.rc",
+                                 "service vendor.camera-provider-andarium "
+                                 "/vendor/bin/hw/android.hardware.camera.provider-service.andarium\n")
+                archive.writestr("VENDOR/etc/vintf/manifest/android.hardware.camera.provider-service.andarium.xml",
+                                 '<manifest version="1.0" type="device"><hal format="aidl">'
+                                 '<name>android.hardware.camera.provider</name><version>3</version>'
+                                 '<fqname>ICameraProvider/internal/1</fqname></hal></manifest>')
+                # The platform's files for a back camera with autofocus and a front camera.
+                if not missing_camera_feature:
+                    archive.writestr(
+                        "VENDOR/etc/permissions/android.hardware.camera.autofocus.xml",
+                        "<permissions>" + "".join(
+                            f'<feature name="android.hardware.camera{suffix}"/>'
+                            for suffix in ("", ".any", ".autofocus")
+                        ) + "</permissions>")
+                archive.writestr(
+                    "VENDOR/etc/permissions/android.hardware.camera.front.xml",
+                    '<permissions><feature name="android.hardware.camera.any"/>'
+                    '<feature name="android.hardware.camera.front"/></permissions>')
                 advertised_features = ["android.hardware.touchscreen",
                                        "android.hardware.sensor.accelerometer",
                                        "android.hardware.sensor.gyroscope",
@@ -2298,7 +2314,7 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                 if not missing_midi_feature:
                     advertised_features.append("android.software.midi")
                 if unsupported_feature:
-                    advertised_features.append("android.hardware.camera")
+                    advertised_features.append("android.hardware.camera.flash")
                 # The virtual Wi-Fi's feature declaration, a file of the platform's own.
                 if not missing_wifi_feature:
                     archive.writestr(
@@ -2899,6 +2915,16 @@ def verify_target_files_fixtures(verifier: Path) -> None:
             ("wrong-vibrator-service", {"entries": {
                 "VENDOR/etc/init/android.hardware.vibrator-service.andarium.rc":
                     b'service vibrator /vendor/bin/hw/android.hardware.vibrator-service.example\n'}}),
+            ("missing-camera", {"entries": {
+                "VENDOR/bin/hw/android.hardware.camera.provider-service.andarium": None}}),
+            ("missing-camera-instance", {"entries": {
+                "VENDOR/etc/vintf/manifest/android.hardware.camera.provider-service.andarium.xml":
+                    b'<manifest version="1.0" type="device"><hal format="aidl">'
+                    b'<name>android.hardware.camera.provider</name><version>3</version>'
+                    b'<fqname>ICameraProvider/default</fqname></hal></manifest>'}}),
+            ("wrong-camera-service", {"entries": {
+                "VENDOR/etc/init/android.hardware.camera.provider-service.andarium.rc":
+                    b'service camera /vendor/bin/hw/android.hardware.camera.provider.ranchu\n'}}),
             ("missing-gnss", {"entries": {
                 "VENDOR/bin/hw/android.hardware.gnss-service.andarium": None}}),
             ("missing-gnss-instance", {"entries": {
@@ -4339,7 +4365,9 @@ def verify_target_files_fixtures(verifier: Path) -> None:
             ("missing-midi-feature-cause", {"missing_midi_feature": True},
              "feature is not declared: android.software.midi"),
             ("camera-feature-cause", {"unsupported_feature": True},
-             "absent hardware feature is advertised.*android.hardware.camera"),
+             "absent hardware feature is advertised.*android.hardware.camera.flash"),
+            ("missing-camera-feature-cause", {"missing_camera_feature": True},
+             "required feature is not declared: android.hardware.camera"),
             ("missing-mic-policy-cause", {"missing_mic_policy": True},
              "ordinary mixer input"),
             ("extra-input-device-cause", {"extra_input_device": True},
@@ -6072,6 +6100,7 @@ def verify_package_assertions(android_root: Path) -> None:
         "android.hardware.sensors@2.1-impl.andarium",
         "android.hardware.vibrator-service.andarium",
         "android.hardware.gnss-service.andarium",
+        "android.hardware.camera.provider-service.andarium",
         "com.android.hardware.thermal",
         "com.android.hardware.cas",
         "libclearkeycasplugin",

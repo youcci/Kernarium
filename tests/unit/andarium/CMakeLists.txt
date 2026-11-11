@@ -27,3 +27,9 @@ target_include_directories(uml_andarium_location_protocol_tests PRIVATE
     ${PROJECT_SOURCE_DIR}/android/lineage-24/overlay/gnss)
 uml_add_unit_test(NAME andarium-location-protocol
     COMMAND uml_andarium_location_protocol_tests LABELS andarium)
+
+add_executable(uml_andarium_camera_protocol_tests camera_protocol_tests.cpp)
+target_include_directories(uml_andarium_camera_protocol_tests PRIVATE
+    ${PROJECT_SOURCE_DIR}/android/lineage-24/overlay/camera)
+uml_add_unit_test(NAME andarium-camera-protocol
+    COMMAND uml_andarium_camera_protocol_tests LABELS andarium)

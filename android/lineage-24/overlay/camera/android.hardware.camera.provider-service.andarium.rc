@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+service vendor.camera-provider-andarium /vendor/bin/hw/android.hardware.camera.provider-service.andarium
+    class hal
+    user system
+    group system
+    capabilities SYS_NICE
+    rlimit rtprio 10 10
+    task_profiles CameraServiceCapacity CameraServicePerformance

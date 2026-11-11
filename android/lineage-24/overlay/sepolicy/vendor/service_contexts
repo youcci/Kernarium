@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
+# goldfish's camera provider, which the product's own is built from, registers
+# this instance; the platform labels internal/0 alone.
+android.hardware.camera.provider.ICameraProvider/internal/1  u:object_r:hal_camera_service:s0

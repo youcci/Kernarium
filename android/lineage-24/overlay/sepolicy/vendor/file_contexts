@@ -30,3 +30,7 @@
 
 # The GNSS HAL that reports the host's location runs in the stock GNSS domain.
 /(vendor|system/vendor)/bin/hw/android\.hardware\.gnss-service\.andarium  u:object_r:hal_gnss_default_exec:s0
+
+# The camera provider that takes the host's pictures runs in the stock camera
+# domain.
+/(vendor|system/vendor)/bin/hw/android\.hardware\.camera\.provider-service\.andarium  u:object_r:hal_camera_default_exec:s0

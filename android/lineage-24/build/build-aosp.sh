@@ -403,6 +403,8 @@ PRODUCT_PACKAGES=" $(get_build_var PRODUCT_PACKAGES) "
 	fail "the vibrator HAL that plays on the host's haptic engine is absent"
 [[ "$PRODUCT_PACKAGES" == *" android.hardware.gnss-service.andarium "* ]] ||
 	fail "the GNSS HAL that reports the host's location is absent"
+[[ "$PRODUCT_PACKAGES" == *" android.hardware.camera.provider-service.andarium "* ]] ||
+	fail "the camera provider that takes the host's pictures is absent"
 for package in \
 	android.hardware.health-service.example \
 	android.hardware.health-service.example_recovery \

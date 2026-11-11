@@ -1,0 +1,89 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Youcef <tools@youcef.de>
+Date: Wed, 11 Nov 2026 19:53:17 +0100
+Subject: [PATCH] goldfish: offer the camera provider as a library
+
+The AIDL camera provider takes its cameras from HwCamera factories, but its
+sources build only into the two emulator binaries, with the QEMU cameras
+linked in. Build the provider itself as libcamera_provider_core.ranchu too, so
+that a product with a camera source of its own links it with that source and
+its own main().
+---
+ hals/camera/Android.bp | 64 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 64 insertions(+)
+
+diff --git a/hals/camera/Android.bp b/hals/camera/Android.bp
+index 0c01370645f71335eb735174f66559dd8e324d2a..71c080583eb9dbbd0100e2695e9386b3d2bbfca8 100644
+--- a/hals/camera/Android.bp
++++ b/hals/camera/Android.bp
+@@ -85,6 +85,70 @@ cc_defaults {
+     ],
+ }
+ 
++// The provider without a source of cameras, for a product that brings its own
++// HwCamera and main(): it links the library and takes the library's
++// dependencies from the defaults, which name no file and so apply in any
++// directory.
++cc_defaults {
++    name: "libcamera_provider_core.ranchu_deps",
++    vendor: true,
++    shared_libs: [
++        "libbase",
++        "libbinder",
++        "libbinder_ndk",
++        "libcamera_metadata",
++        "libcutils",
++        "libexif",
++        "libfmq",
++        "libgralloctypes",
++        "libjpeg",
++        "liblog",
++        "libprocessgroup",
++        "libsync",
++        "libui",
++        "libutils",
++    ],
++    static_libs: [
++        "android.hardware.common-V2-ndk",
++        "android.hardware.common.fmq-V1-ndk",
++        "android.hardware.camera.common-V1-ndk",
++        "android.hardware.camera.device-V3-ndk",
++        "android.hardware.camera.provider-V3-ndk",
++        "libaidlcommonsupport",
++        "libyuv_static",
++    ],
++    header_libs: [
++        "libdebug.ranchu",
++    ],
++}
++
++cc_library_static {
++    name: "libcamera_provider_core.ranchu",
++    defaults: ["libcamera_provider_core.ranchu_deps"],
++    srcs: [
++        "AFStateMachine.cpp",
++        "AutoNativeHandle.cpp",
++        "BaseQemuCamera.cpp",
++        "CachedStreamBuffer.cpp",
++        "CameraDevice.cpp",
++        "CameraDeviceSession.cpp",
++        "CameraProvider.cpp",
++        "converters.cpp",
++        "exif.cpp",
++        "HwCamera.cpp",
++        "jpeg.cpp",
++        "metadata_utils.cpp",
++        "StreamBufferCache.cpp",
++        "service_entry.cpp",
++        "utils.cpp",
++        "yuv.cpp",
++    ],
++    export_include_dirs: ["."],
++    cflags: [
++        "-DLOG_TAG=\"camera.provider.ranchu\"",
++    ],
++}
++
+ cc_binary {
+     name: "android.hardware.camera.provider.ranchu",
+     defaults: ["android.hardware.camera.provider.ranchu_defaults"],
