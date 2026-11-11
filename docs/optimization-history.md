@@ -285,6 +285,7 @@ work, and several image workloads were dominated by pair-vector transfers.
 | G287 | Hold an arm64 gadget-cache slot in two words | Accepted. A slot's link-record memo cost 2 MiB per vCPU whatever the guest ran; the record is found through the per-cache memo indirect misses already use. State kept per way is multiplied by every way of every executor. |
 | G288 | Carve arm64 gadget link records 32 bytes apart | Accepted. A link record keeps only what generated code reads (BlockLink and the `link_exit` word); what only the cache reads sits in a companion behind the chunk's records. Split a record by reader. |
 | G289 | Speed up the COLRv1 emoji painting of a UI rendering CTS test on the gadget engine | Measured; nothing to build. The COLRv1 emoji render is scalar Skia, FreeType and scudo code at about half the ideal gadget rate with no pathology; replicating the bank (G286) made it worse and the remaining levers total 5 to 8 percent. The product accepts the iPad's margin; Mac failures under load are attributed to load. |
+| G290 | Run Android on the arm64 JIT on an iPhone, in JIT memory a debugger prepares | Rejected as a device's engine; kept behind a launch setting. In use the JIT stored blocks without pause, hundreds of thousands a second, with a window of 256 MiB, of 512 MiB and of 1 GiB with the Mac's cache sizes alike, and its frame rate stayed under half of the gadget engine's. Count a cache's stores in steady use before sizing it: a rate that size does not lower is not a size problem. |
 
 ## Host instructions per guest instruction
 

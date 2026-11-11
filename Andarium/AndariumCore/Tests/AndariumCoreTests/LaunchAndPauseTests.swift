@@ -133,6 +133,12 @@ struct LaunchOverridesTests {
         #expect(!launch([:]).erase)
     }
 
+    @Test func jit() {
+        #expect(launch([.jit: "1"]).jit)
+        #expect(!launch([.jit: "0"]).jit)
+        #expect(!launch([:]).jit)
+    }
+
     @Test func statistics() {
         #expect(launch([.stats: "1"]).statistics == true)
         #expect(launch([.stats: "0"]).statistics == false)

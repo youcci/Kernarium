@@ -165,10 +165,10 @@ struct AppEntry {
     /// when asked, and starts it; a normal launch stops at Home.
     @MainActor
     func applyDeferred(to model: AppModel) async {
-        #if !targetEnvironment(simulator)
-        Self.requestJitMemory()
-        #endif
         let launch = overrides
+        #if !targetEnvironment(simulator)
+        if launch.jit { Self.requestJitMemory() }
+        #endif
         guard launch.start != nil || launch.erase else { return }
         if model.guest == nil {
             model.create(Self.launchGuest(launch, on: model))
@@ -191,8 +191,9 @@ struct AppEntry {
 
     #if !targetEnvironment(simulator)
     /// Asks StikDebug to attach a debugger, from which the runtime takes the
-    /// JIT engine's memory. Where StikDebug is not installed nothing opens,
-    /// and the guest runs on the gadget engine.
+    /// JIT engine's memory, for a launch that states `ANDARIUM_JIT`. Where
+    /// StikDebug is not installed nothing opens, and the guest runs on the
+    /// gadget engine.
     @MainActor
     private static func requestJitMemory() {
         guard kernarium_runtime_loader_select(LiveRuntime.androidFlavor) == 0 else { return }

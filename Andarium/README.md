@@ -126,7 +126,7 @@ everything that exists for automation or only pretends:
   `KERNARIUM_` name is in the application or in `AndariumCore`), the harness's
   console lines (`Shared/ConsoleReport.swift`), the launch's deferred work
   (create, erase, start), the isolated guest instance, and the request a
-  development build on a device makes of StikDebug at launch, whose debugger
+  launch with `ANDARIUM_JIT=1` makes of StikDebug on a device, whose debugger
   gives the runtime the JIT engine's memory
   ([executable code](../docs/architecture.md#executable-code)).
 - It defines `UML_APP_STORE_APPLICATION` for the loader it compiles, which

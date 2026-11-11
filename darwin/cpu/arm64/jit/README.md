@@ -2,7 +2,7 @@
 
 The JIT emits native blocks for A64, A32 and T32 guest code into its executable
 arena. It runs on macOS, and on an iOS device only in a development runtime
-that took JIT memory from a debugger
+that was asked to take JIT memory from a debugger
 ([executable code](../../../../docs/architecture.md#executable-code)). The
 gadget engine includes none of it. Exclusives,
 alignment, the SME profile, the AArch32 profile and the semantic slow path's

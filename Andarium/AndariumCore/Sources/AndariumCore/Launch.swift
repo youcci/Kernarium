@@ -22,6 +22,9 @@ public struct LaunchOverrides: Equatable, Sendable {
         case stats
         /// A separate guest for a harness run, leaving the ordinary guest alone.
         case instance
+        /// "1" asks StikDebug for a debugger at launch, whose memory lets the
+        /// guest run on the JIT engine.
+        case jit
     }
 
     public var vCPUCount: Int?
@@ -36,6 +39,8 @@ public struct LaunchOverrides: Equatable, Sendable {
     /// them off. Where the launch states neither, `StatsPreference` decides.
     public var statistics: Bool?
     public var instance: String?
+    /// Ask for the JIT engine's memory at launch.
+    public var jit = false
 
     public init() {}
 
@@ -68,6 +73,7 @@ public struct LaunchOverrides: Equatable, Sendable {
         }
         erase = value(.erase) == "1"
         statistics = flag(.stats)
+        jit = value(.jit) == "1"
         if let name = value(.instance), (1...64).contains(name.utf8.count),
            name.utf8.allSatisfy({
                (65...90).contains($0) || (97...122).contains($0) ||

@@ -449,7 +449,7 @@ a path by hand on an iOS device that has it: launch Kernarium with the
 `guest-hwcap-sanity` payload and the touched families' corpus cases built into
 one static guest program, and require the results of a gadget-engine run on a
 Mac. A device runs the gadget engine, and the JIT only in a development build
-that StikDebug attached a debugger to
+launched with `ANDARIUM_JIT=1` that StikDebug attached a debugger to
 ([executable code](architecture.md#executable-code)), so a JIT path needing one
 of these features runs on an M4 or newer Mac or on such a device. That route has
 no automated test: check a change to it by booting the guest on a device both
