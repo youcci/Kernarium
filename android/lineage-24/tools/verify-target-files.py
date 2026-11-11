@@ -57,6 +57,9 @@ GOOGLE_APPS_FEATURE_NAMES = frozenset(
     {"android.hardware.bluetooth", "android.hardware.bluetooth_le"}
 )
 GOOGLE_APPS_FEATURE_DECLARATIONS = frozenset(f"{name}.xml" for name in GOOGLE_APPS_FEATURE_NAMES)
+# The file that calls Bluetooth unavailable. The framework compiles that in and skips the feature's
+# declaration, so a build has this file exactly when it does not report Bluetooth.
+BLUETOOTH_EXCLUSION = "VENDOR/etc/permissions/bluetooth_excluded_hardware.xml"
 FIRST_USER_RESTRICTIONS = "config_defaultFirstUserRestrictions"
 BLUETOOTH_RESTRICTION = "no_bluetooth"
 # The Mesa Virgl GLES stack: the EGL and GLES libraries the platform loader
@@ -320,7 +323,6 @@ REQUIRED_ENTRIES = {
     f"VENDOR/etc/seccomp_policy/{VIDEO_ENCODER_SECCOMP_EXTENDED}",
     f"VENDOR/etc/vintf/manifest/{VIDEO_ENCODER_SERVICE}.xml",
     "VENDOR/lib64/libc2plugin_store.so",
-    "VENDOR/etc/permissions/bluetooth_excluded_hardware.xml",
     "VENDOR/etc/permissions/handheld_core_hardware.xml",
     "VENDOR/etc/primary_audio_policy_configuration.xml",
     "VENDOR/etc/r_submix_audio_policy_configuration.xml",
@@ -7401,6 +7403,11 @@ def main() -> None:
             fail(
                 "the target files and LINEAGE24_GOOGLE_APPS disagree on Google's applications: "
                 f"{GOOGLE_APPS_APEX} is {'present' if GOOGLE_APPS_APEX in seen else 'absent'}"
+            )
+        if (BLUETOOTH_EXCLUSION in seen) == google_apps:
+            fail(
+                f"{BLUETOOTH_EXCLUSION} is {'present' if google_apps else 'missing'}: a build has "
+                "it exactly when it does not report Bluetooth"
             )
         missing = sorted(REQUIRED_ENTRIES - seen)
         if missing:

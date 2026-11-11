@@ -4005,11 +4005,12 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                     + "".join(f'<feature name="{name}"/>' for name in advertised_features)
                     + "</permissions>",
                 )
-                archive.writestr(
-                    "VENDOR/etc/permissions/bluetooth_excluded_hardware.xml",
-                    '<permissions><unavailable-feature '
-                    'name="android.hardware.bluetooth"/></permissions>',
-                )
+                if google_apps_variant in (None, "bluetooth-excluded"):
+                    archive.writestr(
+                        "VENDOR/etc/permissions/bluetooth_excluded_hardware.xml",
+                        '<permissions><unavailable-feature '
+                        'name="android.hardware.bluetooth"/></permissions>',
+                    )
                 archive.writestr(
                     "RECOVERY/RAMDISK/system/bin/recovery", b"recovery"
                 )
@@ -4416,6 +4417,7 @@ def verify_target_files_fixtures(verifier: Path) -> None:
         for variant, cause in (
             ("no-bluetooth-features", "required feature is not declared: android.hardware.bluetooth"),
             ("no-restriction", "config_defaultFirstUserRestrictions lacks no_bluetooth"),
+            ("bluetooth-excluded", "bluetooth_excluded_hardware.xml is present"),
         ):
             fixture = root / f"google-apps-{variant}.zip"
             write_fixture(fixture, google_apps_variant=variant)
@@ -4732,6 +4734,8 @@ def verify_target_files_fixtures(verifier: Path) -> None:
             ("missing-microphone-feature", {"missing_microphone_feature": True}),
             ("missing-companion-feature", {"missing_companion_feature": True}),
             ("missing-midi-feature", {"missing_midi_feature": True}),
+            ("bluetooth-exclusion-missing",
+             {"entries": {"VENDOR/etc/permissions/bluetooth_excluded_hardware.xml": None}}),
             ("bluetooth-reported-without-google-apps", {"entries": {
                 "VENDOR/etc/permissions/android.hardware.bluetooth.xml":
                     b'<permissions><feature name="android.hardware.bluetooth"/></permissions>'}}),

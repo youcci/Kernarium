@@ -857,6 +857,10 @@ KERNARIUM_REPORTED_BLUETOOTH := \
     frameworks/native/data/etc/android.hardware.bluetooth.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth.xml \
     frameworks/native/data/etc/android.hardware.bluetooth_le.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth_le.xml
 PRODUCT_COPY_FILES_EXCLUDE := $(filter-out $(KERNARIUM_REPORTED_BLUETOOTH),$(PRODUCT_COPY_FILES_EXCLUDE))
+# The inherited exclusion would take the report back: the framework compiles in
+# every feature a copied file calls unavailable and then skips its declaration.
+PRODUCT_COPY_FILES_EXCLUDE += \
+    device/google/cuttlefish/shared/bluetooth/excluded_hardware.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/bluetooth_excluded_hardware.xml
 PRODUCT_COPY_FILES += $(KERNARIUM_REPORTED_BLUETOOTH)
 PRODUCT_PACKAGE_OVERLAYS += device/kernarium/andarium/overlay-google-apps
 endif
