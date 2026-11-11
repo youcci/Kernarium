@@ -5,8 +5,8 @@
 # `cmd overlay fabricate` and `cmd overlay enable` create and enable resource
 # overlays through the platform's overlay manager. A vendor domain may neither
 # execute /system/bin/cmd nor be the framework's client, so the script runs in
-# a core domain defined here, as the time zone script does. The only property
-# the domain sets is its own marker.
+# a core domain defined here, as the time zone script does. The domain sets no
+# property.
 type kernarium_display_shape, domain;
 typeattribute kernarium_display_shape coredomain;
 type kernarium_display_shape_exec, exec_type, system_file_type, file_type;
@@ -28,8 +28,3 @@ allow kernarium_display_shape system_server:binder transfer;
 allow system_server kernarium_display_shape:binder call;
 allow system_server kernarium_display_shape:fd use;
 allow system_server kernarium_display_shape:fifo_file { getattr read write };
-
-# The shape the script applied last, so a boot with the same one changes
-# nothing.
-system_internal_prop(kernarium_display_shape_prop)
-set_prop(kernarium_display_shape, kernarium_display_shape_prop)
