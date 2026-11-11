@@ -5,10 +5,16 @@
 # host application whose display fills a phone's screen states the cutout in
 # the middle of the top edge (a notch or an island) and the radius of the
 # corners at every start (ro.boot.kernarium.display_shape,
-# "<height>,<width>,<radius>" in dp). Once boot completes this script makes
-# them the platform's display cutout and corner radius, through fabricated
-# resource overlays, which only root may create. The platform takes the status
-# bar's height from the cutout and keeps the bar's content beside it.
+# "<height>,<width>,<radius>" in dp). Once boot completes this script makes the
+# cutout the platform's display cutout, through a resource overlay it
+# fabricates, which only root may create, and enables the product's corner
+# overlay (rro/KernariumCornersOverlay), which pads the status bar, the shade's
+# header and the navigation bar beside a rounded corner. The platform takes the
+# status bar's height from the cutout and keeps the bar's content beside it.
+#
+# `cmd overlay fabricate` creates strings, colours and integers but no
+# dimension, which is why the padding is a built overlay with one value for
+# every phone rather than the screen's own radius.
 #
 # The overlays and their enabled state persist, so the script acts only when
 # the launch's shape differs from the one it applied last (the marker), and
@@ -19,6 +25,7 @@ tag=kernarium_display_shape
 marker=persist.sys.kernarium.display_shape_applied
 # Who owns an overlay fabricated through `cmd`.
 owner=com.android.shell
+corners=android.kernarium.overlay.corners
 
 note() {
     log -t "$tag" -p i "$*"
@@ -27,33 +34,18 @@ note() {
 shape=$(getprop ro.boot.kernarium.display_shape)
 # The marker names the set of overlays as well as the shape, so a guest an
 # earlier set was applied to gets this one once.
-applied="2:$shape"
+applied="3:$shape"
 [ "$applied" != "$(getprop "$marker")" ] || exit 0
 
-# `cmd overlay fabricate` takes one value, so each resource has its overlay.
 # put NAME TARGET RESOURCE TYPE VALUE
 put() {
     cmd overlay fabricate --target "$2" --name "$1" "$3" "$4" "$5" >/dev/null 2>&1 &&
         cmd overlay enable --user 0 "$owner:$1" >/dev/null 2>&1
 }
 
-drop() {
-    cmd overlay disable --user 0 "$owner:$1" >/dev/null 2>&1
-}
-
-# A whole number of dp as a resource's dimension value.
-dp() {
-    printf '0x%x' $((($1 << 8) | 1))
-}
-
-# The first set overlaid SystemUI's own padding, which the status bar does
-# not read.
-drop KernariumDisplayCornerPadding
-
 if [ -z "$shape" ]; then
-    drop KernariumDisplayCutout
-    drop KernariumDisplayCorners
-    drop KernariumDisplayContentPadding
+    cmd overlay disable --user 0 "$owner:KernariumDisplayCutout" >/dev/null 2>&1
+    cmd overlay disable --user 0 "$corners" >/dev/null 2>&1
     setprop "$marker" "$applied"
     note "the host's screen hides nothing of the display"
     exit 0
@@ -86,19 +78,12 @@ if [ "$height" -gt 0 ] && [ "$width" -gt 0 ]; then
         android:string/config_mainBuiltInDisplayCutout 0x03 \
         "M -$half,0 L -$half,$height L $half,$height L $half,0 Z @dp" || done=
 else
-    drop KernariumDisplayCutout
+    cmd overlay disable --user 0 "$owner:KernariumDisplayCutout" >/dev/null 2>&1
 fi
 if [ "$radius" -gt 0 ]; then
-    put KernariumDisplayCorners android \
-        android:dimen/rounded_corner_radius 0x05 "$(dp "$radius")" || done=
-    # How far the status bar, the shade's header and the navigation bar keep
-    # their content from a corner: SystemUI reads the platform's value.
-    put KernariumDisplayContentPadding android \
-        android:dimen/rounded_corner_content_padding 0x05 \
-        "$(dp $((radius / 2)))" || done=
+    cmd overlay enable --user 0 "$corners" >/dev/null 2>&1 || done=
 else
-    drop KernariumDisplayCorners
-    drop KernariumDisplayContentPadding
+    cmd overlay disable --user 0 "$corners" >/dev/null 2>&1
 fi
 
 if [ -n "$done" ]; then

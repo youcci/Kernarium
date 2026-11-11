@@ -539,6 +539,7 @@ def verify_target_files_fixtures(verifier: Path) -> None:
 
     tool = load_tool(verifier)
     pinner_overlay_entry = tool.PINNER_OVERLAY
+    corners_overlay_entry = tool.CORNERS_OVERLAY
     statistics_apks = tool.STATISTICS_APKS
     # The Setup Wizard overlay's artwork, as the build would carry it: the raw animation unchanged and
     # the compiled vector holding its path data as strings.
@@ -578,7 +579,7 @@ def verify_target_files_fixtures(verifier: Path) -> None:
     plain_apks = sorted(
         entry for entry in tool.REQUIRED_ENTRIES
         if entry.endswith(".apk") and entry not in tool.REQUIRED_PREOPT_APKS
-        and entry != pinner_overlay_entry
+        and entry not in (pinner_overlay_entry, corners_overlay_entry)
     )
     arm_preopt_apks = sorted(tool.REQUIRED_ARM_PREOPT_APKS)
     uml_fstab = tracked_fstab(verifier.parents[1])
@@ -1995,6 +1996,22 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                             else b"\x00config_pinnerHomePinBytes\x00",
                         )
                 archive.writestr(pinner_overlay_entry, pinner_overlay.getvalue())
+                # The overlay that pads content beside a rounded corner, built the same way.
+                corners_overlay = io.BytesIO()
+                with zipfile.ZipFile(corners_overlay, "w") as overlay:
+                    overlay.writestr(
+                        "AndroidManifest.xml",
+                        synthetic_compiled_manifest(
+                            29 if display_shape_variant == "corners-target-sdk-29" else 28
+                        ),
+                    )
+                    overlay.writestr(
+                        "resources.arsc",
+                        b"\x00" if display_shape_variant == "corners-no-resource"
+                        else b"\x00rounded_corner_content_padding\x00",
+                    )
+                if display_shape_variant != "missing-corners-overlay":
+                    archive.writestr(corners_overlay_entry, corners_overlay.getvalue())
                 # The runtime resource overlay Soong generates from the product's
                 # SimpleDeviceConfig overlays. Its string pool holds each DeviceConfig list:
                 # LineageOS's, then the product's, which adds the ops of AOSP's default.
@@ -3171,6 +3188,9 @@ def verify_target_files_fixtures(verifier: Path) -> None:
             ("reclaim-missing-call", {"reclaim_variant": "missing-call"}),
             ("reclaim-missing-fd", {"reclaim_variant": "missing-fd"}),
             ("reclaim-missing-fifo", {"reclaim_variant": "missing-fifo"}),
+            ("missing-corners-overlay", {"display_shape_variant": "missing-corners-overlay"}),
+            ("corners-overlay-target-sdk-29", {"display_shape_variant": "corners-target-sdk-29"}),
+            ("corners-overlay-no-resource", {"display_shape_variant": "corners-no-resource"}),
             ("missing-display-shape-script", {"display_shape_variant": "missing-script"}),
             ("missing-display-shape-rc", {"display_shape_variant": "missing-rc"}),
             ("display-shape-started-at-boot", {"display_shape_variant": "started-at-boot"}),
@@ -4049,6 +4069,8 @@ def verify_target_files_fixtures(verifier: Path) -> None:
              "does not allow system_server kernarium_reclaim_boot_apps fd use"),
             ("reclaim-missing-fifo-cause", {"reclaim_variant": "missing-fifo"},
              "does not allow system_server kernarium_reclaim_boot_apps fifo_file write"),
+            ("corners-overlay-target-sdk-29-cause", {"display_shape_variant": "corners-target-sdk-29"},
+             "KernariumCornersOverlay.apk targets SDK 29"),
             ("missing-display-shape-script-cause", {"display_shape_variant": "missing-script"},
              "required entries are missing: .*SYSTEM_EXT/bin/kernarium_display_shape.sh"),
             ("display-shape-started-at-boot-cause", {"display_shape_variant": "started-at-boot"},
