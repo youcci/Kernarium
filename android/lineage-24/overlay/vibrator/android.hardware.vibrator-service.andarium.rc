@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+service vendor.vibrator-andarium /vendor/bin/hw/android.hardware.vibrator-service.andarium
+    class hal
+    user nobody
+    group nobody

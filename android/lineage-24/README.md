@@ -83,7 +83,7 @@ UML implementation. `Build.SOC_MANUFACTURER` and `SOC_MODEL` are `Kernarium` and
   hearing, Bluetooth pairing, telephony, biometric and USB pages) and hides the
   Wi-Fi hotspot, wireless display and System update pages.
 - **Hardware not advertised.** Telephony, GNSS, NFC, UWB, Thread, camera,
-  biometric, vibrator, secure element, USB, Bluetooth and Trusty. SecureElement
+  biometric, secure element, USB, Bluetooth and Trusty. SecureElement
   is kept but not persistent (route `p0024`): nothing starts it at boot, and the
   first `SEService` client that binds it starts it.
 - **Diagnostics.** A `user` image needs no guest root for diagnostics: the
@@ -159,6 +159,17 @@ format. Axes match the mounted virtual display, Core Motion acceleration is
 multiplied by -9.80665, and events carry the guest's `CLOCK_BOOTTIME` at receipt:
 a live input path, not a synchronized recording. Andarium's
 [scene policy](../../Andarium/README.md#devices) describes windowed operation.
+
+### Vibrator
+
+The vibrator HAL (`overlay/vibrator/`) offers on, off and amplitude control; the
+framework's own fallbacks replace effects and primitives. It accepts a single
+connection on vsock port 5557 from host CID 2 and tells the host how long the
+vibrator stays on and at what amplitude.
+`overlay/vibrator/vibration_protocol.hpp` and
+`Andarium/AndariumCore/Sources/AndariumCore/Vibration.swift` own the wire
+format. Andarium plays it on the device's haptic engine; a host without one
+plays nothing.
 
 ### Networking
 

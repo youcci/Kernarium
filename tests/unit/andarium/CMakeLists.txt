@@ -15,3 +15,9 @@ target_include_directories(uml_andarium_motion_protocol_tests PRIVATE
     ${PROJECT_SOURCE_DIR}/android/lineage-24/overlay/sensors)
 uml_add_unit_test(NAME andarium-motion-protocol
     COMMAND uml_andarium_motion_protocol_tests LABELS andarium)
+
+add_executable(uml_andarium_vibration_protocol_tests vibration_protocol_tests.cpp)
+target_include_directories(uml_andarium_vibration_protocol_tests PRIVATE
+    ${PROJECT_SOURCE_DIR}/android/lineage-24/overlay/vibrator)
+uml_add_unit_test(NAME andarium-vibration-protocol
+    COMMAND uml_andarium_vibration_protocol_tests LABELS andarium)

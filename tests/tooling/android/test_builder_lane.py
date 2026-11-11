@@ -2235,6 +2235,14 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                                  '<manifest version="1.0" type="device"><hal format="aidl">'
                                  '<name>android.hardware.sensors</name><version>3</version>'
                                  '<fqname>ISensors/default</fqname></hal></manifest>')
+                archive.writestr("VENDOR/bin/hw/android.hardware.vibrator-service.andarium", synthetic_aarch64_elf())
+                archive.writestr("VENDOR/etc/init/android.hardware.vibrator-service.andarium.rc",
+                                 "service vendor.vibrator-andarium "
+                                 "/vendor/bin/hw/android.hardware.vibrator-service.andarium\n")
+                archive.writestr("VENDOR/etc/vintf/manifest/android.hardware.vibrator-service.andarium.xml",
+                                 '<manifest version="1.0" type="device"><hal format="aidl">'
+                                 '<name>android.hardware.vibrator</name><version>4</version>'
+                                 '<fqname>IVibrator/default</fqname></hal></manifest>')
                 advertised_features = ["android.hardware.touchscreen",
                                        "android.hardware.sensor.accelerometer",
                                        "android.hardware.sensor.gyroscope"]
@@ -2825,6 +2833,13 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                 "VENDOR/etc/vintf/manifest/android.hardware.sensors-multihal.xml": b'<manifest/>'}}),
             ("wrong-motion-service", {"entries": {
                 "VENDOR/etc/init/android.hardware.sensors-service-multihal.rc": b'service sensor /vendor/bin/other\n'}}),
+            ("missing-vibrator", {"entries": {
+                "VENDOR/bin/hw/android.hardware.vibrator-service.andarium": None}}),
+            ("missing-vibrator-instance", {"entries": {
+                "VENDOR/etc/vintf/manifest/android.hardware.vibrator-service.andarium.xml": b'<manifest/>'}}),
+            ("wrong-vibrator-service", {"entries": {
+                "VENDOR/etc/init/android.hardware.vibrator-service.andarium.rc":
+                    b'service vibrator /vendor/bin/hw/android.hardware.vibrator-service.example\n'}}),
             ("32-bit-alignment", {"arm_alignment": 2048}),
             ("32-bit-hard-float", {"arm_flags": 0x05000400}),
             ("alignment", {"alignment": 4096}),
@@ -5970,6 +5985,7 @@ def verify_package_assertions(android_root: Path) -> None:
     for package in (
         "android.hardware.sensors-service.multihal",
         "android.hardware.sensors@2.1-impl.andarium",
+        "android.hardware.vibrator-service.andarium",
         "com.android.hardware.thermal",
         "com.android.hardware.cas",
         "libclearkeycasplugin",

@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+# The vibrator HAL tells the host's haptic engine what to play on vsock, like
+# the motion sub-HAL beside it. It accepts only host CID 2, writes its frames
+# to the accepted connection and shuts it down when one cannot be sent whole.
+typeattribute hal_vibrator_default unconstrained_vsock_violators;
+allow hal_vibrator_default self:vsock_socket { create bind listen accept read write shutdown getattr getopt };

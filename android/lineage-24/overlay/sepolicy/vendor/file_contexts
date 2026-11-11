@@ -23,3 +23,7 @@
 # The Codec2 store that serves the host's hardware video encoders runs in the
 # mediacodec domain like the stock Codec2 service.
 /(vendor|system/vendor)/bin/hw/android\.hardware\.media\.c2-service-v4l2  u:object_r:mediacodec_exec:s0
+
+# The vibrator HAL that plays on the host's haptic engine runs in the stock
+# vibrator domain.
+/(vendor|system/vendor)/bin/hw/android\.hardware\.vibrator-service\.andarium  u:object_r:hal_vibrator_default_exec:s0

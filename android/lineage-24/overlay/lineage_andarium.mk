@@ -121,6 +121,11 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.sensor.accelerometer.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.sensor.accelerometer.xml \
     frameworks/native/data/etc/android.hardware.sensor.gyroscope.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.sensor.gyroscope.xml
 
+# Android's vibrator is the host's haptic engine (vibrator/): the HAL tells the
+# host what to play on a private vsock connection, like the motion backend.
+# The Cuttlefish example vibrator stays out.
+PRODUCT_PACKAGES += android.hardware.vibrator-service.andarium
+
 PRODUCT_NAME := lineage_andarium
 PRODUCT_DEVICE := andarium
 PRODUCT_BRAND := Andarium

@@ -1,0 +1,9 @@
+// SPDX-License-Identifier: Apache-2.0
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+cc_library_headers {
+    name: "andarium_host_link_headers",
+    vendor: true,
+    export_include_dirs: ["."],
+}

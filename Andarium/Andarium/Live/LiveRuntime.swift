@@ -59,6 +59,7 @@ final class LiveRuntime: RuntimeDriver {
     /// The guest's adb key, made before the start that boots with it.
     private var adbIdentity: AdbKeyStore.Identity?
     private let motion = MotionSensors()
+    private let haptics = GuestHaptics()
     /// The interface orientation the sensors' axes are mounted to.
     private var motionMount = MotionMount()
     private lazy var rotation = GuestRotationController(
@@ -534,12 +535,13 @@ final class LiveRuntime: RuntimeDriver {
     }
 
     private func updateMotionSensors() {
+        let foreground = normalRun && reachedBootCompleted && active && !holdsGuestStill
         motion.update(
             enabled: model?.motionSensorsOn == true,
-            foreground: normalRun && reachedBootCompleted && active && !holdsGuestStill
-                && rotation.applied == rotationPolicy,
+            foreground: foreground && rotation.applied == rotationPolicy,
             axes: motionMount.axes
         )
+        haptics.update(foreground: foreground)
     }
 
     // MARK: Microphone

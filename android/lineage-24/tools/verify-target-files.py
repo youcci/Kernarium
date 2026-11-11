@@ -212,6 +212,9 @@ REQUIRED_ENTRIES = {
     "VENDOR/etc/vintf/manifest/android.hardware.sensors-multihal.xml",
     "VENDOR/lib64/hw/android.hardware.sensors@2.1-impl.andarium.so",
     "VENDOR/etc/init/android.hardware.sensors-service-multihal.rc",
+    "VENDOR/bin/hw/android.hardware.vibrator-service.andarium",
+    "VENDOR/etc/init/android.hardware.vibrator-service.andarium.rc",
+    "VENDOR/etc/vintf/manifest/android.hardware.vibrator-service.andarium.xml",
 
     "BOOT/kernel",
     "INIT_BOOT/RAMDISK/init",
@@ -2606,6 +2609,38 @@ def check_motion_sensors(archive: zipfile.ZipFile, infos: dict[str, zipfile.ZipI
         fail("motion sensor HAL service does not start the multi-HAL binary")
 
 
+def check_host_hal(
+    archive: zipfile.ZipFile, infos: dict[str, zipfile.ZipInfo], service: str, interface: str,
+    instance: str, what: str,
+) -> None:
+    """A HAL of this product that the host backs: its VINTF fragment declares the AIDL instance
+    and its init script starts the binary, both installed under the service's name."""
+    fragment = ET.fromstring(read_small(archive, infos[f"VENDOR/etc/vintf/manifest/{service}.xml"]))
+    if not any(
+        hal.get("format") == "aidl"
+        and hal.findtext("name") == interface
+        and (
+            hal.findtext("fqname") == f"{instance}/default"
+            or any(
+                entry.findtext("name") == instance and entry.findtext("instance") == "default"
+                for entry in hal.findall("interface")
+            )
+        )
+        for hal in fragment.findall("hal")
+    ):
+        fail(f"{what} HAL is not declared as AIDL {instance}/default")
+    script = read_small(archive, infos[f"VENDOR/etc/init/{service}.rc"]).decode()
+    if not re.search(rf"^service \S+ /vendor/bin/hw/{re.escape(service)}$", script, re.M):
+        fail(f"{what} HAL service does not start the Andarium binary")
+
+
+def check_vibrator(archive: zipfile.ZipFile, infos: dict[str, zipfile.ZipInfo]) -> None:
+    check_host_hal(
+        archive, infos, "android.hardware.vibrator-service.andarium",
+        "android.hardware.vibrator", "IVibrator", "vibrator",
+    )
+
+
 def check_hardware_features(
     archive: zipfile.ZipFile, infos: dict[str, zipfile.ZipInfo]
 ) -> None:
@@ -4365,6 +4400,7 @@ def main() -> None:
         check_app_dexpreopt(seen)
         check_hardware_features(archive, infos)
         check_motion_sensors(archive, infos)
+        check_vibrator(archive, infos)
         check_discrete_ops(archive, infos)
         check_default_wallpaper(archive, infos)
         check_no_statistics_uploader(archive, infos)
