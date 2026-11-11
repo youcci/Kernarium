@@ -1,0 +1,51 @@
+darwin/cpu/arm64/engine_adapters.hpp
+  s_a16f104b1ec06c::t_c9144d1f2184da 15,17
+  s_a16f104b1ec06c::t_2a25d20f949341 16
+docs/architecture.md
+  s_a16f104b1ec06c::t_2726acd6417b91 178-187
+darwin/cpu/engine_factory.cpp
+  s_a16f104b1ec06c::t_2a25d20f949341 45-48,50
+  s_a16f104b1ec06c::t_c9144d1f2184da 44,49
+darwin/runtime/context.cpp
+  s_a16f104b1ec06c::t_edc173f4813f69 537-544,546
+  s_a16f104b1ec06c::t_c9144d1f2184da 531-536,545
+Kernarium/Runtime/KernariumRuntime.h
+  s_a16f104b1ec06c::t_c9144d1f2184da 560-567
+darwin/cpu/engine_factory.hpp
+  s_a16f104b1ec06c::t_c9144d1f2184da 15,19
+  s_a16f104b1ec06c::t_edc173f4813f69 16-18,20
+darwin/cpu/arm64/jit/README.md
+  s_a16f104b1ec06c::t_2726acd6417b91 4-7,18,34-35
+darwin/runtime/CMakeLists.txt
+  s_a16f104b1ec06c::t_edc173f4813f69 46-49,51
+  s_a16f104b1ec06c::t_f0fc341cd6b7af 50
+darwin/cpu/arm64/jit/engine_adapter.cpp
+  s_a16f104b1ec06c::t_2a25d20f949341 97-100
+  s_a16f104b1ec06c::t_c9144d1f2184da 96,101
+  s_a16f104b1ec06c::t_edc173f4813f69 9
+  s_a16f104b1ec06c::t_9668fd571eb264 102
+docs/testing.md
+  s_a16f104b1ec06c::t_2726acd6417b91 451-456
+Kernarium/Runtime/KernariumRuntime.mm
+  s_a16f104b1ec06c::t_c9144d1f2184da 835-838,859-872,874,1775-1777,2414-2427
+  s_a16f104b1ec06c::t_d62dca8612c19f 858,873,1774,1778
+darwin/runtime/execution_engine.hpp
+  s_a16f104b1ec06c::t_c9144d1f2184da 27-31,39
+  s_a16f104b1ec06c::t_edc173f4813f69 32-38,40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0f642d526cf9c0ca416d72c1d5b1ce52cd386a37",
+  "prompts": {},
+  "sessions": {
+    "s_a16f104b1ec06c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "af5893c4-3ef0-4641-a6c7-1c1413188116",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
