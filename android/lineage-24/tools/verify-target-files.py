@@ -215,6 +215,9 @@ REQUIRED_ENTRIES = {
     "VENDOR/bin/hw/android.hardware.vibrator-service.andarium",
     "VENDOR/etc/init/android.hardware.vibrator-service.andarium.rc",
     "VENDOR/etc/vintf/manifest/android.hardware.vibrator-service.andarium.xml",
+    "VENDOR/bin/hw/android.hardware.gnss-service.andarium",
+    "VENDOR/etc/init/android.hardware.gnss-service.andarium.rc",
+    "VENDOR/etc/vintf/manifest/android.hardware.gnss-service.andarium.xml",
 
     "BOOT/kernel",
     "INIT_BOOT/RAMDISK/init",
@@ -507,7 +510,6 @@ FORBIDDEN_FEATURE_DECLARATIONS = {
     "android.hardware.camera.raw.xml",
     "android.hardware.ethernet.xml",
     "android.hardware.fingerprint.xml",
-    "android.hardware.location.gps.xml",
     "android.hardware.telephony.xml",
     "android.hardware.usb.accessory.xml",
     "android.hardware.usb.host.xml",
@@ -539,6 +541,8 @@ REQUIRED_FEATURE_NAMES = {
     "android.hardware.touchscreen.multitouch.jazzhand",
     "android.hardware.sensor.accelerometer",
     "android.hardware.sensor.gyroscope",
+    "android.hardware.location",
+    "android.hardware.location.gps",
     "android.hardware.microphone",
     "android.hardware.wifi",
     "android.software.companion_device_setup",
@@ -556,7 +560,6 @@ FORBIDDEN_FEATURE_NAMES = {
     "android.hardware.context_hub",
     "android.hardware.ethernet",
     "android.hardware.fingerprint",
-    "android.hardware.location.gps",
     "android.hardware.telephony",
     "android.hardware.usb.accessory",
     "android.hardware.usb.host",
@@ -2641,6 +2644,13 @@ def check_vibrator(archive: zipfile.ZipFile, infos: dict[str, zipfile.ZipInfo]) 
     )
 
 
+def check_gnss(archive: zipfile.ZipFile, infos: dict[str, zipfile.ZipInfo]) -> None:
+    check_host_hal(
+        archive, infos, "android.hardware.gnss-service.andarium",
+        "android.hardware.gnss", "IGnss", "GNSS",
+    )
+
+
 def check_hardware_features(
     archive: zipfile.ZipFile, infos: dict[str, zipfile.ZipInfo]
 ) -> None:
@@ -4401,6 +4411,7 @@ def main() -> None:
         check_hardware_features(archive, infos)
         check_motion_sensors(archive, infos)
         check_vibrator(archive, infos)
+        check_gnss(archive, infos)
         check_discrete_ops(archive, infos)
         check_default_wallpaper(archive, infos)
         check_no_statistics_uploader(archive, infos)

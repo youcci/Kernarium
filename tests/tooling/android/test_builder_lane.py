@@ -760,6 +760,7 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                           missing_microphone_feature: bool = False,
                           missing_companion_feature: bool = False,
                           missing_midi_feature: bool = False,
+                          missing_gps_feature: bool = False,
                           missing_mic_policy: bool = False,
                           extra_input_device: bool = False,
                           wrong_kernel_config: bool = False,
@@ -2243,9 +2244,20 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                                  '<manifest version="1.0" type="device"><hal format="aidl">'
                                  '<name>android.hardware.vibrator</name><version>4</version>'
                                  '<fqname>IVibrator/default</fqname></hal></manifest>')
+                archive.writestr("VENDOR/bin/hw/android.hardware.gnss-service.andarium", synthetic_aarch64_elf())
+                archive.writestr("VENDOR/etc/init/android.hardware.gnss-service.andarium.rc",
+                                 "service vendor.gnss-andarium "
+                                 "/vendor/bin/hw/android.hardware.gnss-service.andarium\n")
+                archive.writestr("VENDOR/etc/vintf/manifest/android.hardware.gnss-service.andarium.xml",
+                                 '<manifest version="1.0" type="device"><hal format="aidl">'
+                                 '<name>android.hardware.gnss</name><version>7</version>'
+                                 '<fqname>IGnss/default</fqname></hal></manifest>')
                 advertised_features = ["android.hardware.touchscreen",
                                        "android.hardware.sensor.accelerometer",
-                                       "android.hardware.sensor.gyroscope"]
+                                       "android.hardware.sensor.gyroscope",
+                                       "android.hardware.location"]
+                if not missing_gps_feature:
+                    advertised_features.append("android.hardware.location.gps")
                 advertised_features.extend(
                     feature for feature in (
                         "android.hardware.touchscreen.multitouch",
@@ -2840,6 +2852,13 @@ def verify_target_files_fixtures(verifier: Path) -> None:
             ("wrong-vibrator-service", {"entries": {
                 "VENDOR/etc/init/android.hardware.vibrator-service.andarium.rc":
                     b'service vibrator /vendor/bin/hw/android.hardware.vibrator-service.example\n'}}),
+            ("missing-gnss", {"entries": {
+                "VENDOR/bin/hw/android.hardware.gnss-service.andarium": None}}),
+            ("missing-gnss-instance", {"entries": {
+                "VENDOR/etc/vintf/manifest/android.hardware.gnss-service.andarium.xml": b'<manifest/>'}}),
+            ("wrong-gnss-service", {"entries": {
+                "VENDOR/etc/init/android.hardware.gnss-service.andarium.rc":
+                    b'service gnss /apex/com.android.hardware.gnss/bin/hw/android.hardware.gnss-service.example\n'}}),
             ("32-bit-alignment", {"arm_alignment": 2048}),
             ("32-bit-hard-float", {"arm_flags": 0x05000400}),
             ("alignment", {"alignment": 4096}),
@@ -2922,6 +2941,7 @@ def verify_target_files_fixtures(verifier: Path) -> None:
             ("missing-microphone-feature", {"missing_microphone_feature": True}),
             ("missing-companion-feature", {"missing_companion_feature": True}),
             ("missing-midi-feature", {"missing_midi_feature": True}),
+            ("missing-gps-feature", {"missing_gps_feature": True}),
             ("missing-mic-policy", {"missing_mic_policy": True}),
             ("extra-input-device", {"extra_input_device": True}),
             ("kernel-config", {"wrong_kernel_config": True}),
@@ -4251,6 +4271,8 @@ def verify_target_files_fixtures(verifier: Path) -> None:
              "feature is not declared: android.hardware.microphone"),
             ("missing-companion-feature-cause", {"missing_companion_feature": True},
              "feature is not declared: android.software.companion_device_setup"),
+            ("missing-gps-feature-cause", {"missing_gps_feature": True},
+             "required feature is not declared: android.hardware.location.gps"),
             ("missing-midi-feature-cause", {"missing_midi_feature": True},
              "feature is not declared: android.software.midi"),
             ("camera-feature-cause", {"unsupported_feature": True},
@@ -5986,6 +6008,7 @@ def verify_package_assertions(android_root: Path) -> None:
         "android.hardware.sensors-service.multihal",
         "android.hardware.sensors@2.1-impl.andarium",
         "android.hardware.vibrator-service.andarium",
+        "android.hardware.gnss-service.andarium",
         "com.android.hardware.thermal",
         "com.android.hardware.cas",
         "libclearkeycasplugin",

@@ -253,6 +253,12 @@ requires reopening Andarium.
   a guest application uses it and sends samples over private vsock port 5556;
   the system image must include the
   [motion sub-HAL](../android/lineage-24/README.md#motion-sensors).
+- **Location.** The guest's location is the device's: while the guest is in
+  front, the host holds private vsock port 5558 to the system image's
+  [GNSS HAL](../android/lineage-24/README.md#location), and Core Location
+  runs only while Android's location framework has that HAL started. iOS asks
+  for When In Use access the first time that happens; without it the guest
+  gets no fixes.
 - **Vibration.** On a device with a haptic engine, the guest's vibrations play
   on it: the host holds private vsock port 5557 to the system image's
   [vibrator HAL](../android/lineage-24/README.md#vibrator) while the guest is

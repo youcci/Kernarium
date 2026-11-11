@@ -82,8 +82,8 @@ UML implementation. `Build.SOC_MANUFACTURER` and `SOC_MODEL` are `Kernarium` and
   entry, the Bluetooth developer option, the media output switcher, and the
   hearing, Bluetooth pairing, telephony, biometric and USB pages) and hides the
   Wi-Fi hotspot, wireless display and System update pages.
-- **Hardware not advertised.** Telephony, GNSS, NFC, UWB, Thread, camera,
-  biometric, secure element, USB, Bluetooth and Trusty. SecureElement
+- **Hardware not advertised.** Telephony, NFC, UWB, Thread, camera, biometric,
+  secure element, USB, Bluetooth and Trusty. SecureElement
   is kept but not persistent (route `p0024`): nothing starts it at boot, and the
   first `SEService` client that binds it starts it.
 - **Diagnostics.** A `user` image needs no guest root for diagnostics: the
@@ -170,6 +170,17 @@ vibrator stays on and at what amplitude.
 `Andarium/AndariumCore/Sources/AndariumCore/Vibration.swift` own the wire
 format. Andarium plays it on the device's haptic engine; a host without one
 plays nothing.
+
+### Location
+
+The GNSS HAL (`overlay/gnss/`) reports the host's location: it accepts a single
+connection on vsock port 5558 from host CID 2, tells the host while Android's
+location framework has it started, and makes every fix the host then sends a
+location, at the interval the framework asked for. It reports no satellites,
+measurements or NMEA and offers no extension. `overlay/gnss/location_protocol.hpp`
+and `Andarium/AndariumCore/Sources/AndariumCore/GuestLocation.swift` own the
+wire format. The product declares `android.hardware.location` and
+`android.hardware.location.gps`.
 
 ### Networking
 

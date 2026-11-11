@@ -60,6 +60,7 @@ final class LiveRuntime: RuntimeDriver {
     private var adbIdentity: AdbKeyStore.Identity?
     private let motion = MotionSensors()
     private let haptics = GuestHaptics()
+    private let location = GuestLocation()
     /// The interface orientation the sensors' axes are mounted to.
     private var motionMount = MotionMount()
     private lazy var rotation = GuestRotationController(
@@ -542,6 +543,7 @@ final class LiveRuntime: RuntimeDriver {
             axes: motionMount.axes
         )
         haptics.update(foreground: foreground)
+        location.update(foreground: foreground)
     }
 
     // MARK: Microphone

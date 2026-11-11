@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+service vendor.gnss-andarium /vendor/bin/hw/android.hardware.gnss-service.andarium
+    class hal
+    user nobody
+    group nobody

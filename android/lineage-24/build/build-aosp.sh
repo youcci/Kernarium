@@ -401,6 +401,8 @@ PRODUCT_PACKAGES=" $(get_build_var PRODUCT_PACKAGES) "
 	fail "the Andarium motion sensor backend is absent"
 [[ "$PRODUCT_PACKAGES" == *" android.hardware.vibrator-service.andarium "* ]] ||
 	fail "the vibrator HAL that plays on the host's haptic engine is absent"
+[[ "$PRODUCT_PACKAGES" == *" android.hardware.gnss-service.andarium "* ]] ||
+	fail "the GNSS HAL that reports the host's location is absent"
 for package in \
 	android.hardware.health-service.example \
 	android.hardware.health-service.example_recovery \

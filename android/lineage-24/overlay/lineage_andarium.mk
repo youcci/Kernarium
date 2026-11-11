@@ -17,8 +17,9 @@
 
 # Select the UML-safe branches in the inherited Cuttlefish product before it
 # is evaluated. The Darwin machine has no nested Trusty VM, modem, NFC,
-# Bluetooth, GNSS, biometric, secure-element, or camera transport, and its
-# Wi-Fi is the kernel's virtual one (kernarium_net_setup).
+# Bluetooth, biometric, secure-element, or camera transport, its Wi-Fi is the
+# kernel's virtual one (kernarium_net_setup), and its GNSS HAL is the product's
+# own (gnss/), not Cuttlefish's.
 TRUSTY_SYSTEM_VM := disabled
 UML_ANDROID_SECURITY_HALS := nonsecure
 UML_ANDROID_BUILTIN_KERNEL := true
@@ -125,6 +126,14 @@ PRODUCT_COPY_FILES += \
 # host what to play on a private vsock connection, like the motion backend.
 # The Cuttlefish example vibrator stays out.
 PRODUCT_PACKAGES += android.hardware.vibrator-service.andarium
+
+# Android's location comes from the host's location service (gnss/): the GNSS
+# HAL reports the fixes the host sends on a private vsock connection, while the
+# framework has it started. The feature file declares android.hardware.location
+# and android.hardware.location.gps.
+PRODUCT_PACKAGES += android.hardware.gnss-service.andarium
+PRODUCT_COPY_FILES += \
+    frameworks/native/data/etc/android.hardware.location.gps.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.location.gps.xml
 
 PRODUCT_NAME := lineage_andarium
 PRODUCT_DEVICE := andarium
@@ -386,7 +395,6 @@ PRODUCT_COPY_FILES_EXCLUDE += \
     frameworks/native/data/etc/android.hardware.camera.raw.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.raw.xml \
     frameworks/native/data/etc/android.hardware.consumerir.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.consumerir.xml \
     frameworks/native/data/etc/android.hardware.ethernet.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.ethernet.xml \
-    frameworks/native/data/etc/android.hardware.location.gps.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.location.gps.xml \
     frameworks/native/data/etc/android.hardware.usb.accessory.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.usb.accessory.xml \
     frameworks/native/data/etc/android.hardware.usb.host.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.usb.host.xml \
     frameworks/native/data/etc/android.hardware.uwb.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.uwb.xml \

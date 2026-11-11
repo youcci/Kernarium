@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+# The GNSS HAL receives the host's location fixes on vsock, like the motion
+# sub-HAL beside it. It accepts only host CID 2 and tells the host on the
+# accepted connection whether the framework wants fixes.
+typeattribute hal_gnss_default unconstrained_vsock_violators;
+allow hal_gnss_default self:vsock_socket { create bind listen accept read write shutdown getattr getopt };
