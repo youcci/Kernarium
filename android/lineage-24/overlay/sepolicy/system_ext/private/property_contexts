@@ -37,7 +37,3 @@ ctl.oneshot_on$kernarium_sms_wake       u:object_r:ctl_kernarium_sms_locked_prop
 ctl.oneshot_off$kernarium_sms_wake      u:object_r:ctl_kernarium_sms_locked_prop:s0 exact
 ctl.oneshot_on$kernarium_sms_listener   u:object_r:ctl_kernarium_sms_locked_prop:s0 exact
 ctl.oneshot_off$kernarium_sms_listener  u:object_r:ctl_kernarium_sms_locked_prop:s0 exact
-
-# The display shape the product applied last from the host's screen, so a boot
-# with the same shape changes no overlay.
-persist.sys.kernarium.display_shape_applied    u:object_r:kernarium_display_shape_prop:s0 exact string

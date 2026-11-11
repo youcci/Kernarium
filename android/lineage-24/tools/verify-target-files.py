@@ -928,22 +928,19 @@ TIME_ZONE_TRANSITION = re.compile(
 # application states at every start (ro.boot.kernarium.display_shape), the platform's display
 # cutout and corner radius, through resource overlays it fabricates as root, in a core domain of
 # its own on system_ext (overlay/tools/kernarium_display_shape.sh, overlay/sepolicy/system_ext/
-# private). The overlays persist, so it records the shape it applied in a marker property of its
-# own, the only property the domain sets.
+# private). A fabricated overlay does not survive a system update, so the script reads the
+# platform's state at every boot instead of keeping a record, and its domain sets no property.
 DISPLAY_SHAPE_SERVICE = (
     "kernarium_display_shape", "/system_ext/bin/kernarium_display_shape.sh"
 )
 DISPLAY_SHAPE_TRIGGER = "property:sys.boot_completed=1"
-DISPLAY_SHAPE_MARKER = "persist.sys.kernarium.display_shape_applied"
-DISPLAY_SHAPE_MARKER_TYPE = "kernarium_display_shape_prop"
 DISPLAY_SHAPE_SCRIPT_REQUIRED = (
     "ro.boot.kernarium.display_shape",
     "cmd overlay fabricate",
     "cmd overlay enable",
+    "cmd overlay lookup",
     "android:string/config_mainBuiltInDisplayCutout",
     "android.kernarium.overlay.corners",
-    DISPLAY_SHAPE_MARKER,
-    'setprop "$marker" "$applied"',
 )
 DISPLAY_SHAPE_TRANSITION = re.compile(
     rb"^\(typetransition init(?:_[0-9]+)? kernarium_display_shape_exec process "
@@ -4331,9 +4328,6 @@ def check_kernel_policy(
     check_display_shape_policy(
         system_ext_policy,
         read_small(archive, infos["SYSTEM_EXT/etc/selinux/system_ext_file_contexts"]),
-        read_small(archive, infos["SYSTEM_EXT/etc/selinux/system_ext_property_contexts"]).decode(
-            "utf-8", errors="strict"
-        ),
     )
     check_property_writers(
         platform_policy,
@@ -4886,10 +4880,8 @@ def check_display_shape(rc_payload: str, script: bytes) -> None:
             fail(f"{executable} does not contain '{token}'")
 
 
-def check_display_shape_policy(
-    system_ext_policy: bytes, system_ext_file_contexts: bytes, system_ext_property_contexts: str
-) -> None:
-    """The script runs in its own core domain, uses only the overlay service, sets only its marker."""
+def check_display_shape_policy(system_ext_policy: bytes, system_ext_file_contexts: bytes) -> None:
+    """The script runs in its own core domain, uses only the overlay service and sets no property."""
     domain = DISPLAY_SHAPE_SERVICE[0]
     if file_context_label(system_ext_file_contexts, DISPLAY_SHAPE_SERVICE[1]) != (
         f"u:object_r:{domain}_exec:s0"
@@ -4922,27 +4914,14 @@ def check_display_shape_policy(
                 f"system_ext policy does not allow {source} {target} {object_class.decode()} "
                 f"{permission.decode()}: {why}"
             )
-    if DISPLAY_SHAPE_MARKER_TYPE not in cil_attribute_members(
-        system_ext_policy, "system_property_type"
-    ):
-        fail(f"system_ext policy does not define the system-owned {DISPLAY_SHAPE_MARKER_TYPE}")
-    settable = {
+    settable = sorted(
         CIL_PLATFORM_VERSION_SUFFIX.sub("", match.group(2).decode())
         for match in CIL_PROPERTY_SET_RULE.finditer(system_ext_policy)
         if CIL_PLATFORM_VERSION_SUFFIX.sub("", match.group(1).decode()) == domain
         and b"set" in match.group(3).split()
-    }
-    if settable != {DISPLAY_SHAPE_MARKER_TYPE}:
-        fail(
-            f"system_ext policy lets the display shape domain set {sorted(settable)}, not only "
-            f"its own marker {DISPLAY_SHAPE_MARKER_TYPE}"
-        )
-    if not any(
-        line.split()[:2] == [DISPLAY_SHAPE_MARKER, f"u:object_r:{DISPLAY_SHAPE_MARKER_TYPE}:s0"]
-        for line in system_ext_property_contexts.splitlines()
-        if line.strip() and not line.lstrip().startswith("#")
-    ):
-        fail(f"system_ext property contexts do not label {DISPLAY_SHAPE_MARKER}")
+    )
+    if settable:
+        fail(f"system_ext policy lets the display shape domain set {settable}: it sets no property")
 
 
 def check_keyboard_default(rc_payload: str, script: bytes) -> None:

@@ -9,88 +9,94 @@
 # cutout the platform's display cutout, through a resource overlay it
 # fabricates, which only root may create, and enables the product's corner
 # overlay (rro/KernariumCornersOverlay), which pads the status bar, the shade's
-# header and the navigation bar beside a rounded corner. The platform takes the
-# status bar's height from the cutout and keeps the bar's content beside it.
+# header and the navigation bar beside a rounded corner and sizes the shade
+# header's rows. The platform takes the status bar's height from the cutout and
+# keeps the bar's content beside it.
 #
 # `cmd overlay fabricate` creates strings, colours and integers but no
-# dimension, which is why the padding is a built overlay with one value for
-# every phone rather than the screen's own radius.
+# dimension, which is why the corner overlay is a built one with one value for
+# every phone rather than the screen's own measures.
 #
-# The overlays and their enabled state persist, so the script acts only when
-# the launch's shape differs from the one it applied last (the marker), and
-# disables them when a launch states none. It logs one line (tag
-# kernarium_display_shape) for what it did, and nothing here can fail a boot.
+# A fabricated overlay does not survive a system update, so the script keeps no
+# record of what it applied: at every boot it reads the cutout and the corner
+# overlay's state from the platform and changes only what differs. It logs one
+# line (tag kernarium_display_shape) when it changes something, and nothing here
+# can fail a boot.
 
 tag=kernarium_display_shape
-marker=persist.sys.kernarium.display_shape_applied
+cutout_resource=android:string/config_mainBuiltInDisplayCutout
 # Who owns an overlay fabricated through `cmd`.
-owner=com.android.shell
-corners=android.kernarium.overlay.corners
+cutout_overlay=com.android.shell:KernariumDisplayCutout
+corners_overlay=android.kernarium.overlay.corners
 
 note() {
     log -t "$tag" -p i "$*"
 }
 
 shape=$(getprop ro.boot.kernarium.display_shape)
-# The marker names the set of overlays as well as the shape, so a guest an
-# earlier set was applied to gets this one once.
-applied="3:$shape"
-[ "$applied" != "$(getprop "$marker")" ] || exit 0
-
-# put NAME TARGET RESOURCE TYPE VALUE
-put() {
-    cmd overlay fabricate --target "$2" --name "$1" "$3" "$4" "$5" >/dev/null 2>&1 &&
-        cmd overlay enable --user 0 "$owner:$1" >/dev/null 2>&1
-}
-
-if [ -z "$shape" ]; then
-    cmd overlay disable --user 0 "$owner:KernariumDisplayCutout" >/dev/null 2>&1
-    cmd overlay disable --user 0 "$corners" >/dev/null 2>&1
-    setprop "$marker" "$applied"
-    note "the host's screen hides nothing of the display"
-    exit 0
+height=0
+width=0
+radius=0
+if [ -n "$shape" ]; then
+    # The runtime checks the value too. Nothing else may reach `cmd`.
+    height=${shape%%,*}
+    rest=${shape#*,}
+    width=${rest%%,*}
+    radius=${rest#*,}
+    for measure in "$height" "$width" "$radius"; do
+        case "$measure" in
+            "" | *[!0-9]* | ????*)
+                note "ignoring the host's display shape: not three measures"
+                exit 0
+                ;;
+        esac
+    done
+    [ "$shape" = "$height,$width,$radius" ] || {
+        note "ignoring the host's display shape: not three measures"
+        exit 0
+    }
 fi
 
-# The runtime checks the value too. Nothing else may reach `cmd`.
-height=${shape%%,*}
-rest=${shape#*,}
-width=${rest%%,*}
-radius=${rest#*,}
-for measure in "$height" "$width" "$radius"; do
-    case "$measure" in
-        "" | *[!0-9]* | ????*)
-            note "ignoring the host's display shape: not three measures"
-            exit 0
-            ;;
-    esac
-done
-[ "$shape" = "$height,$width,$radius" ] || {
-    note "ignoring the host's display shape: not three measures"
-    exit 0
-}
+# The cutout the display should have: a rectangle in the middle of the top
+# edge, where the path's origin is, or none.
+wanted_cutout=
+if [ "$height" -gt 0 ] && [ "$width" -gt 0 ]; then
+    half=$(((width + 1) / 2))
+    wanted_cutout="M -$half,0 L -$half,$height L $half,$height L $half,0 Z @dp"
+fi
+wanted_corners=
+[ "$radius" -eq 0 ] || wanted_corners=1
+
+cutout=$(cmd overlay lookup --user 0 android "$cutout_resource" 2>/dev/null)
+corners=
+case "$(cmd overlay list --user 0 2>/dev/null)" in
+    *"[x] $corners_overlay"*) corners=1 ;;
+esac
+[ "$cutout" != "$wanted_cutout" ] || [ "$corners" != "$wanted_corners" ] || exit 0
 
 done=1
-if [ "$height" -gt 0 ] && [ "$width" -gt 0 ]; then
-    # A rectangle in the middle of the top edge: the path's origin is the
-    # middle of the edge.
-    half=$(((width + 1) / 2))
-    put KernariumDisplayCutout android \
-        android:string/config_mainBuiltInDisplayCutout 0x03 \
-        "M -$half,0 L -$half,$height L $half,$height L $half,0 Z @dp" || done=
-else
-    cmd overlay disable --user 0 "$owner:KernariumDisplayCutout" >/dev/null 2>&1
+if [ "$cutout" != "$wanted_cutout" ]; then
+    if [ -n "$wanted_cutout" ]; then
+        cmd overlay fabricate --target android --name KernariumDisplayCutout \
+            "$cutout_resource" 0x03 "$wanted_cutout" >/dev/null 2>&1 &&
+            cmd overlay enable --user 0 "$cutout_overlay" >/dev/null 2>&1 || done=
+    else
+        cmd overlay disable --user 0 "$cutout_overlay" >/dev/null 2>&1 || done=
+    fi
 fi
-if [ "$radius" -gt 0 ]; then
-    cmd overlay enable --user 0 "$corners" >/dev/null 2>&1 || done=
-else
-    cmd overlay disable --user 0 "$corners" >/dev/null 2>&1
+if [ "$corners" != "$wanted_corners" ]; then
+    if [ -n "$wanted_corners" ]; then
+        cmd overlay enable --user 0 "$corners_overlay" >/dev/null 2>&1 || done=
+    else
+        cmd overlay disable --user 0 "$corners_overlay" >/dev/null 2>&1 || done=
+    fi
 fi
 
-if [ -n "$done" ]; then
-    setprop "$marker" "$applied"
+if [ -z "$done" ]; then
+    note "the platform refused the display shape ${shape:-of a display nothing is hidden of}"
+elif [ -n "$shape" ]; then
     note "the display's cutout and corners are $shape, as the host's screen"
 else
-    # The marker stays, so the next boot tries again.
-    note "the platform refused the display shape $shape"
+    note "the host's screen hides nothing of the display"
 fi
 exit 0

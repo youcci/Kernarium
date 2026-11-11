@@ -1211,8 +1211,9 @@ in dp; the standalone macOS launcher passes none).
 `kernarium_display_shape.sh` applies it at boot completion for user 0: the
 cutout through a resource overlay it fabricates as root, and the padding of
 content beside a corner and the height of the shade header's rows by enabling
-`KernariumCornersOverlay`, which holds one value of each for every phone. It acts only when the shape differs from the one
-it applied last, and disables the overlays when a launch states none.
+`KernariumCornersOverlay`, which holds one value of each for every phone. A fabricated overlay does not survive a system
+update, so it reads the platform's state at every boot, changes only what
+differs, and disables the overlays when a launch states none.
 
 ### Branding and diagnostics
 
