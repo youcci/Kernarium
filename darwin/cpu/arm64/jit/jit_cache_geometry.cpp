@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "jit_cache_geometry.hpp"
 
+#include "cpu/jit_memory/executable_memory.hpp"
 #include "jit_cache.hpp"
 #include "jit_executor_pool.hpp"
 #include "jit_linking.hpp"
@@ -195,6 +196,14 @@ std::size_t JitCacheGeometry::total_bytes() const noexcept
 bool set_jit_cache_budget(std::size_t total_bytes,
 	unsigned executors, std::size_t per_executor_bytes) noexcept
 {
+	/* Where the host bounds JIT memory, the private caches fit the bound:
+	 * their arenas are all the JIT memory a run maps. */
+	if (const auto bound = jit_memory::capacity();
+	    bound != 0 && executors != 0) {
+		total_bytes = std::min(total_bytes, bound);
+		per_executor_bytes =
+			std::min(per_executor_bytes, bound / executors);
+	}
 	if (!derive_jit_cache_geometry(
 			total_bytes, executors, per_executor_bytes).valid())
 		return false;

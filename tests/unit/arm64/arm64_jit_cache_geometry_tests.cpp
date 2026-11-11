@@ -4,6 +4,7 @@
 #include "cpu/arm64/jit/jit_linking.hpp"
 #include "require.hpp"
 
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <cstdio>
@@ -137,6 +138,33 @@ void representative_geometry_remains_stable_and_bounded()
 		4U * gib, 10,
 		arm64::maximum_jit_cache_budget_per_executor + 1U).valid(),
 		"private cap above the production ceiling was accepted");
+}
+
+/* Where the host bounds JIT memory (an iPhone's debugger window), publication
+ * holds the whole budget to the bound and each executor's to its share of it;
+ * every executor's arenas, all the JIT memory a run maps, then fit. */
+void a_budget_held_to_a_memory_bound_fits_it()
+{
+	constexpr std::size_t granule = 16U * 1024U;
+	constexpr auto mapped = [](std::size_t bytes) {
+		return (bytes + granule - 1U) / granule * granule;
+	};
+	for (const auto bound : std::array{64U * mib, 256U * mib, 1024U * mib}) {
+		for (unsigned executors = 1;
+		     executors <= arm64::maximum_jit_cache_executors; ++executors) {
+			const auto geometry = arm64::derive_jit_cache_geometry(
+				bound, executors,
+				std::min(arm64::maximum_jit_cache_budget_per_executor,
+					bound / executors));
+			require(geometry.valid(),
+				"a bounded budget left an executor no geometry");
+			const auto executable = mapped(geometry.arena_bytes) +
+				mapped(geometry.tracked_store_arena_bytes) +
+				mapped(arm64::single_instruction_arena_size);
+			require(executable <= bound / executors,
+				"an executor's arenas exceed its share of the bound");
+		}
+	}
 }
 
 void publication_is_an_atomic_first_valid_pair()
@@ -373,6 +401,7 @@ int main()
 	try {
 		geometry_respects_every_supported_executor_count();
 		representative_geometry_remains_stable_and_bounded();
+		a_budget_held_to_a_memory_bound_fits_it();
 		publication_is_an_atomic_first_valid_pair();
 		one_jit_run_session_is_admitted_at_a_time();
 		a_standalone_executor_lease_is_excluded_by_a_managed_session();
