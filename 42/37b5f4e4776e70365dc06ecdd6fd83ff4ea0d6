@@ -1,0 +1,30 @@
+Andarium/README.md
+  s_83f5d907de3616::t_d83ac8756183eb 264-268
+Andarium/Andarium/Live/GuestCamera.swift
+  s_83f5d907de3616::t_d83ac8756183eb 1-173
+Andarium/Andarium/Live/LiveRuntime.swift
+  s_83f5d907de3616::t_d83ac8756183eb 64,548
+Andarium/AndariumCore/Sources/AndariumCore/GuestCamera.swift
+  s_83f5d907de3616::t_beedfd3be12995 1-107
+Andarium/Config/Info.plist
+  s_83f5d907de3616::t_d83ac8756183eb 9-10
+Andarium/AndariumCore/Tests/AndariumCoreTests/GuestCameraTests.swift
+  s_83f5d907de3616::t_d403d7c099ba82 36,40,53,57
+  s_83f5d907de3616::t_8510691ffe7661 1-35,37-39,41-52,54-56,58-98
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4237b5f4e4776e70365dc06ecdd6fd83ff4ea0d6",
+  "prompts": {},
+  "sessions": {
+    "s_83f5d907de3616": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a5ab82a9-5d39-4921-8909-98778519fb84",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
