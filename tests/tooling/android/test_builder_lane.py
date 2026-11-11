@@ -2657,7 +2657,7 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                                     "getprop ro.boot.other"),
                     "no-cutout": ("android:string/config_mainBuiltInDisplayCutout",
                                   "android:string/other"),
-                    "no-marker": ('setprop "$marker" "$shape"', "true"),
+                    "no-marker": ('setprop "$marker" "$applied"', "true"),
                 }.items():
                     if display_shape_variant == variant:
                         if old not in display_shape_script:

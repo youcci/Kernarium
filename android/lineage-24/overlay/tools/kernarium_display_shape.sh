@@ -25,7 +25,10 @@ note() {
 }
 
 shape=$(getprop ro.boot.kernarium.display_shape)
-[ "$shape" != "$(getprop "$marker")" ] || exit 0
+# The marker names the set of overlays as well as the shape, so a guest an
+# earlier set was applied to gets this one once.
+applied="2:$shape"
+[ "$applied" != "$(getprop "$marker")" ] || exit 0
 
 # `cmd overlay fabricate` takes one value, so each resource has its overlay.
 # put NAME TARGET RESOURCE TYPE VALUE
@@ -43,11 +46,15 @@ dp() {
     printf '0x%x' $((($1 << 8) | 1))
 }
 
+# The first set overlaid SystemUI's own padding, which the status bar does
+# not read.
+drop KernariumDisplayCornerPadding
+
 if [ -z "$shape" ]; then
     drop KernariumDisplayCutout
     drop KernariumDisplayCorners
-    drop KernariumDisplayCornerPadding
-    setprop "$marker" ""
+    drop KernariumDisplayContentPadding
+    setprop "$marker" "$applied"
     note "the host's screen hides nothing of the display"
     exit 0
 fi
@@ -84,18 +91,18 @@ fi
 if [ "$radius" -gt 0 ]; then
     put KernariumDisplayCorners android \
         android:dimen/rounded_corner_radius 0x05 "$(dp "$radius")" || done=
-    # How far the status bar keeps its content from a corner. A platform
-    # without the resource lays the content out by the radius alone.
-    put KernariumDisplayCornerPadding com.android.systemui \
-        com.android.systemui:dimen/rounded_corner_content_padding 0x05 \
-        "$(dp $((radius / 2)))"
+    # How far the status bar, the shade's header and the navigation bar keep
+    # their content from a corner: SystemUI reads the platform's value.
+    put KernariumDisplayContentPadding android \
+        android:dimen/rounded_corner_content_padding 0x05 \
+        "$(dp $((radius / 2)))" || done=
 else
     drop KernariumDisplayCorners
-    drop KernariumDisplayCornerPadding
+    drop KernariumDisplayContentPadding
 fi
 
 if [ -n "$done" ]; then
-    setprop "$marker" "$shape"
+    setprop "$marker" "$applied"
     note "the display's cutout and corners are $shape, as the host's screen"
 else
     # The marker stays, so the next boot tries again.

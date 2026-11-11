@@ -941,8 +941,9 @@ DISPLAY_SHAPE_SCRIPT_REQUIRED = (
     "cmd overlay enable",
     "android:string/config_mainBuiltInDisplayCutout",
     "android:dimen/rounded_corner_radius",
+    "android:dimen/rounded_corner_content_padding",
     DISPLAY_SHAPE_MARKER,
-    'setprop "$marker" "$shape"',
+    'setprop "$marker" "$applied"',
 )
 DISPLAY_SHAPE_TRANSITION = re.compile(
     rb"^\(typetransition init(?:_[0-9]+)? kernarium_display_shape_exec process "

@@ -1208,8 +1208,8 @@ A host application whose display fills a phone's screen states what the screen
 hides of it at every start (`androidboot.kernarium.display_shape`: the height
 and width of the cutout in the middle of the top edge and the corners' radius,
 in dp; the standalone macOS launcher passes none).
-`kernarium_display_shape.sh` makes them the platform's display cutout and
-corner radius at boot completion, through resource overlays it fabricates as
+`kernarium_display_shape.sh` makes them the platform's display cutout, corner
+radius and the padding of content beside a corner at boot completion, through resource overlays it fabricates as
 root and enables for user 0. It acts only when the shape differs from the one
 it applied last, and disables the overlays when a launch states none.
 
