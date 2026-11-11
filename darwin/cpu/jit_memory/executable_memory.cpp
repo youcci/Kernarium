@@ -3,7 +3,9 @@
 
 #include <sys/mman.h>
 
+#include <TargetConditionals.h>
 #include <libkern/OSCacheControl.h>
+#include <mach/mach.h>
 #include <os/lock.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -12,38 +14,109 @@
 #include <cstddef>
 #include <cstdint>
 
+#if defined(__APPLE__) && TARGET_OS_IPHONE && !defined(UML_APP_STORE_RUNTIME)
+/* The code-signing status call of the C library, which no SDK header declares. */
+extern "C" int csops(pid_t pid, unsigned int ops, void *useraddr,
+	size_t usersize);
+#endif
+
 namespace uml::cpu::jit_memory {
 namespace {
 
-/* Publication route for MAP_JIT memory.
+/* How this process comes by memory it can write code into and run.
  *
- * macOS declares pthread_jit_write_protect_np and calls it directly. No iOS
- * product has a publication route: a physical device cannot obtain the
- * entitlement, so JIT memory reports itself unavailable there rather than
- * mapping memory it could never publish into.
+ * toggle: macOS maps MAP_JIT memory and switches the calling thread between
+ * writing and running it with pthread_jit_write_protect_np.
  *
- * The Simulator is deliberately held to the same answer even though it runs on
- * macOS and could reach the toggle dynamically. Letting it translate through a
- * path production devices cannot use would make the Simulator unrepresentative
- * of the product it exists to stand in for.
+ * debugger: an iPhone grants an application no JIT memory of its own, but a
+ * debugger can make a region of a debugged process executable. A development
+ * runtime has the debugger its application asked for prepare one window, runs
+ * code through that mapping and writes it through a second, writable mapping
+ * of the same pages (claim_from_debugger). An App Store runtime holds none of
+ * it.
+ *
+ * none: every other product. The Simulator is deliberately held to this answer
+ * even though it runs on macOS and could reach the toggle dynamically: letting
+ * it translate through a path production devices cannot use would make it
+ * unrepresentative of the product it exists to stand in for.
  */
+enum class Route { none, toggle, debugger };
+
 #if defined(__APPLE__) && defined(__aarch64__) && defined(MAP_JIT) && \
 	!defined(__IPHONE_OS_VERSION_MAX_ALLOWED)
+constexpr auto route = Route::toggle;
+
 void jit_write_protect(int enable)
 {
 	pthread_jit_write_protect_np(enable);
 }
-
-constexpr bool jit_publication_supported() noexcept
-{
-	return true;
-}
 #else
-constexpr void jit_write_protect(int) {}
+#if defined(__APPLE__) && defined(__aarch64__) && TARGET_OS_IPHONE && \
+	!TARGET_OS_SIMULATOR && !defined(UML_APP_STORE_RUNTIME)
+#define UML_JIT_MEMORY_FROM_DEBUGGER 1
+constexpr auto route = Route::debugger;
+#else
+constexpr auto route = Route::none;
+#endif
 
-constexpr bool jit_publication_supported() noexcept
+constexpr void jit_write_protect(int) {}
+#endif
+
+#ifdef UML_JIT_MEMORY_FROM_DEBUGGER
+/* The window a debugger is asked for: the size it was shown to prepare on an
+ * iPhone. The debugger touches every page of it, so the whole window counts
+ * as resident from the start, and none can be added once the debugger has
+ * left.
+ * shortcut: one size for every guest; measure Android's arena use on the
+ * phone before growing it. */
+constexpr std::size_t debugger_window_bytes = 256U * 1024U * 1024U;
+/* How long the debugger the application asked for may take to attach. */
+constexpr unsigned debugger_wait_seconds = 120;
+
+[[nodiscard]] bool debugged() noexcept
 {
-	return false;
+	constexpr unsigned status = 0; /* CS_OPS_STATUS */
+	constexpr std::uint32_t debugged_flag = 0x10000000U; /* CS_DEBUGGED */
+	std::uint32_t flags = 0;
+	return csops(getpid(), status, &flags, sizeof flags) == 0 &&
+		(flags & debugged_flag) != 0;
+}
+
+/* StikDebug's breakpoint protocol: the debugger's script reads the command in
+ * x16, steps over the breakpoint and answers in x0. Without that debugger the
+ * breakpoint ends the process, so neither runs before debugged() holds. */
+
+/* Has the debugger map size executable bytes; the mapping, or nullptr. */
+[[gnu::naked, gnu::noinline]] void *debugger_prepare(void *, std::size_t)
+{
+	__asm__("mov x16, #1\n"
+		"brk #0xf00d\n"
+		"ret\n");
+}
+
+[[gnu::naked, gnu::noinline]] void debugger_detach()
+{
+	__asm__("mov x16, #0\n"
+		"brk #0xf00d\n"
+		"ret\n");
+}
+
+/* A writable mapping of the size bytes at code, or nullptr. */
+[[nodiscard]] void *writable_alias(void *code, std::size_t size) noexcept
+{
+	vm_address_t alias = 0;
+	vm_prot_t current = 0;
+	vm_prot_t maximum = 0;
+	if (vm_remap(mach_task_self(), &alias, size, 0, VM_FLAGS_ANYWHERE,
+		    mach_task_self(), reinterpret_cast<vm_address_t>(code),
+		    FALSE, &current, &maximum, VM_INHERIT_NONE) != KERN_SUCCESS)
+		return nullptr;
+	if (mprotect(reinterpret_cast<void *>(alias), size,
+		    PROT_READ | PROT_WRITE) != 0) {
+		(void)vm_deallocate(mach_task_self(), alias, size);
+		return nullptr;
+	}
+	return reinterpret_cast<void *>(alias);
 }
 #endif
 
@@ -78,6 +151,10 @@ constexpr bool jit_publication_supported() noexcept
  * keeps the pages mapped and marks them reusable; memory served again may
  * still hold what it held before. When the window is full, or cannot be
  * placed, a mapping goes wherever the kernel puts it.
+ *
+ * On the debugger route the window is the one region the debugger prepared,
+ * wherever it put it. Nothing can be mapped beside it later, and its pages
+ * stay as the debugger left them, so a release only frees the range.
  */
 class Window final {
 public:
@@ -104,7 +181,8 @@ public:
 		void *mapping = base_ + first * granule;
 		/* A released range is reusable: the kernel may discard its pages
 		 * until it is claimed back. */
-		(void)madvise(mapping, count * granule, MADV_FREE_REUSE);
+		if constexpr (route == Route::toggle)
+			(void)madvise(mapping, count * granule, MADV_FREE_REUSE);
 		return mapping;
 	}
 
@@ -126,12 +204,64 @@ public:
 			return true;
 		/* Marked reusable before it is free, so no later claim can
 		 * race the advice. */
-		(void)madvise(mapping, count * granule, MADV_FREE_REUSABLE);
+		if constexpr (route == Route::toggle)
+			(void)madvise(mapping, count * granule,
+				MADV_FREE_REUSABLE);
 		os_unfair_lock_lock(&lock_);
 		mark(first, count, false);
 		os_unfair_lock_unlock(&lock_);
 		return true;
 	}
+
+	/* The window's size, zero while there is none. */
+	[[nodiscard]] std::size_t bytes() noexcept
+	{
+		os_unfair_lock_lock(&lock_);
+		const auto bytes = granules_ * granule;
+		os_unfair_lock_unlock(&lock_);
+		return bytes;
+	}
+
+#ifdef UML_JIT_MEMORY_FROM_DEBUGGER
+	/* The address that writes the window's byte at code. A caller holds
+	 * code only after the window exists, so this reads without the lock. */
+	[[nodiscard]] void *writable(void *code) const noexcept
+	{
+		return static_cast<std::byte *>(code) + alias_offset_;
+	}
+
+	[[nodiscard]] bool claim_from_debugger() noexcept
+	{
+		os_unfair_lock_lock(&lock_);
+		const bool first = !claimed_;
+		claimed_ = true;
+		os_unfair_lock_unlock(&lock_);
+		/* A debugger that is here before the application asked for one
+		 * is somebody else's, and would stop at the breakpoint. */
+		if (!first || debugged())
+			return bytes() != 0;
+		for (unsigned polls = 0; !debugged(); ++polls) {
+			if (polls == debugger_wait_seconds * 4U)
+				return false;
+			(void)usleep(250000);
+		}
+		/* The debugger leaves at once: while it is attached every
+		 * signal of the process waits for it to answer. */
+		void *const code =
+			debugger_prepare(nullptr, debugger_window_bytes);
+		void *const alias = code == nullptr ? nullptr :
+			writable_alias(code, debugger_window_bytes);
+		debugger_detach();
+		if (alias == nullptr)
+			return false;
+		os_unfair_lock_lock(&lock_);
+		base_ = static_cast<std::byte *>(code);
+		granules_ = debugger_window_bytes / granule;
+		alias_offset_ = static_cast<std::byte *>(alias) - base_;
+		os_unfair_lock_unlock(&lock_);
+		return true;
+	}
+#endif
 
 private:
 	/* The host page on every Apple arm64 product. */
@@ -150,7 +280,7 @@ private:
 
 	void claim_locked() noexcept
 	{
-		if (claimed_)
+		if (claimed_ || route != Route::toggle)
 			return;
 		claimed_ = true;
 		if (static_cast<std::size_t>(getpagesize()) > granule)
@@ -210,6 +340,9 @@ private:
 	bool claimed_{};
 	std::byte *base_{};
 	std::size_t granules_{};
+#ifdef UML_JIT_MEMORY_FROM_DEBUGGER
+	std::ptrdiff_t alias_offset_{};
+#endif
 	std::array<std::uint64_t, max_bytes / granule / 64U> used_{};
 };
 
@@ -219,6 +352,10 @@ constinit Window window;
 
 bool available() noexcept
 {
+	/* The debugger's window appears while the process runs, so this route
+	 * is asked each time. */
+	if constexpr (route == Route::debugger)
+		return window.bytes() != 0;
 	static const bool supported = [] {
 #if defined(__APPLE__) && defined(__aarch64__) && defined(MAP_JIT)
 		/* A successful MAP_JIT mapping is necessary but not sufficient:
@@ -226,7 +363,7 @@ bool available() noexcept
 		 * the publication route keeps this from promising an engine that
 		 * would abort on its first translated block.
 		 */
-		if (!jit_publication_supported())
+		if (route != Route::toggle)
 			return false;
 		void *mapping = mmap(nullptr, 16U * 1024U,
 			PROT_READ | PROT_WRITE | PROT_EXEC,
@@ -243,12 +380,30 @@ bool available() noexcept
 	return supported;
 }
 
+#ifndef UML_APP_STORE_RUNTIME
+bool claim_from_debugger() noexcept
+{
+#ifdef UML_JIT_MEMORY_FROM_DEBUGGER
+	return window.claim_from_debugger();
+#else
+	return false;
+#endif
+}
+#endif
+
+std::size_t capacity() noexcept
+{
+	return route == Route::debugger ? window.bytes() : 0;
+}
+
 void *allocate(std::size_t size) noexcept
 {
-	if constexpr (jit_publication_supported()) {
+	if constexpr (route != Route::none) {
 		if (void *mapping = window.allocate(size); mapping != nullptr)
 			return mapping;
 	}
+	if constexpr (route == Route::debugger)
+		return nullptr;
 	void *mapping = mmap(nullptr, size, PROT_READ | PROT_WRITE | PROT_EXEC,
 		MAP_PRIVATE | MAP_ANON | MAP_JIT, -1, 0);
 	return mapping == MAP_FAILED ? nullptr : mapping;
@@ -256,11 +411,20 @@ void *allocate(std::size_t size) noexcept
 
 void release(void *mapping, std::size_t size)
 {
-	if constexpr (jit_publication_supported()) {
+	if constexpr (route != Route::none) {
 		if (window.release(mapping, size))
 			return;
 	}
 	(void)munmap(mapping, size);
+}
+
+void *writable(void *code) noexcept
+{
+#ifdef UML_JIT_MEMORY_FROM_DEBUGGER
+	return window.writable(code);
+#else
+	return code;
+#endif
 }
 
 void set_writable(bool writable)

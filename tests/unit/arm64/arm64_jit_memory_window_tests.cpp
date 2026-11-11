@@ -37,7 +37,7 @@ constexpr std::uintptr_t block_bytes = std::uintptr_t{1} << 32U;
 	const std::array<std::uint32_t, 2> words{
 		0x52800000U | (std::uint32_t{value} << 5U), 0xd65f03c0U};
 	jit_memory::set_writable(true);
-	std::memcpy(code, words.data(), sizeof words);
+	std::memcpy(jit_memory::writable(code), words.data(), sizeof words);
 	jit_memory::set_writable(false);
 	jit_memory::invalidate_instruction_cache(code, sizeof words);
 	return reinterpret_cast<std::uint32_t (*)()>(code)();
@@ -121,6 +121,14 @@ void a_full_window_falls_back_and_recovers()
 int main()
 {
 	require(jit_memory::available(), "this host cannot run JIT code");
+	/* The debugger's window is an iPhone's: a Mac writes code where it runs
+	 * it and maps as much as it is asked for. */
+	require(!jit_memory::claim_from_debugger() &&
+			jit_memory::capacity() == 0,
+		"a Mac took JIT memory from a debugger");
+	int probe = 0;
+	require(jit_memory::writable(&probe) == &probe,
+		"a Mac writes JIT memory at another address than it runs it");
 	the_window_is_claimed_before_data_fills_the_block();
 	allocations_come_from_the_window_lowest_first();
 	a_full_window_falls_back_and_recovers();

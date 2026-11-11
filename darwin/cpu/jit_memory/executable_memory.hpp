@@ -13,19 +13,42 @@
 namespace uml::cpu::jit_memory {
 
 /* Whether this process can run JIT code: a publication route exists and a JIT
- * mapping succeeds. The answer is probed once per process, and a process that
- * can claims the window allocate serves from then, before other mappings fill
- * the range near this image.
+ * mapping succeeds. On macOS the answer is probed once per process, and a
+ * process that can claims the window allocate serves from then, before other
+ * mappings fill the range near this image. On an iPhone it holds once
+ * claim_from_debugger has succeeded.
  */
 [[nodiscard]] bool available() noexcept;
 
-/* Returns size bytes of JIT memory, readable, writable and executable, or
- * nullptr. A thread writes it only inside its write window. On macOS the
- * memory comes from one window near this image, because Apple cores predict
- * an indirect branch's target cheaply only near the branch; memory released
- * and served again may still hold its old bytes.
+#ifndef UML_APP_STORE_RUNTIME
+/* The iPhone's route to JIT memory, which an App Store runtime does not have;
+ * false on every other product. Call it before the application asks StikDebug
+ * to attach. It waits, within a bound, for that debugger, has it prepare the
+ * one window allocate serves from, and detaches it; the answer is whether the
+ * window exists. A debugger that is attached already is not used, and later
+ * calls only report.
+ */
+[[nodiscard]] bool claim_from_debugger() noexcept;
+#endif
+
+/* The most JIT memory this process can hold at once, or zero where the host
+ * sets no bound. A JIT sizes its caches to fit.
+ */
+[[nodiscard]] std::size_t capacity() noexcept;
+
+/* Returns size bytes of JIT memory to write and run, or nullptr. A thread
+ * writes it only inside its write window and only through writable(). On
+ * macOS the memory comes from one window near this image, because Apple cores
+ * predict an indirect branch's target cheaply only near the branch; memory
+ * released and served again may still hold its old bytes.
  */
 [[nodiscard]] void *allocate(std::size_t size) noexcept;
+
+/* The address that writes the JIT memory which runs at code: code itself on
+ * macOS, and the window's second, writable mapping on an iPhone, where the
+ * mapping that runs is never writable.
+ */
+[[nodiscard]] void *writable(void *code) noexcept;
 
 /* The calls below end in the C library, which the compiler cannot prove
  * nothrow. They are not noexcept, so none compiles to a frame with its own
