@@ -331,6 +331,7 @@ REQUIRED_ENTRIES = {
     "SYSTEM_EXT/etc/init/kernarium_sms_listener.rc",
     # The application that draws the launcher applications' icons for kernarium_apps (overlay/app_icons).
     "SYSTEM_EXT/app/KernariumIcons/KernariumIcons.apk",
+    "VENDOR/overlay/KernariumCornersOverlay.apk",
     *ABI_LIST_PROPERTY_FILES,
     *MESA_ELF_ENTRIES,
     *MESA_HAL_ENTRIES,
@@ -940,8 +941,7 @@ DISPLAY_SHAPE_SCRIPT_REQUIRED = (
     "cmd overlay fabricate",
     "cmd overlay enable",
     "android:string/config_mainBuiltInDisplayCutout",
-    "android:dimen/rounded_corner_radius",
-    "android:dimen/rounded_corner_content_padding",
+    "android.kernarium.overlay.corners",
     DISPLAY_SHAPE_MARKER,
     'setprop "$marker" "$applied"',
 )
@@ -2561,6 +2561,10 @@ def check_wifi_overlay(archive: zipfile.ZipFile, infos: dict[str, zipfile.ZipInf
 PINNER_OVERLAY = "VENDOR/overlay/KernariumPinnerOverlay.apk"
 PINNER_OVERLAY_RESOURCE = b"config_pinnerHomePinBytes"
 PINNER_OVERLAY_MAX_TARGET_SDK = 28
+# The padding of content beside a rounded corner is such a resource too. The display shape
+# script enables the overlay that sets it for a guest whose display fills a phone's screen.
+CORNERS_OVERLAY = "VENDOR/overlay/KernariumCornersOverlay.apk"
+CORNERS_OVERLAY_RESOURCE = b"rounded_corner_content_padding"
 # The framework attributes android:targetSdkVersion and android:debuggable, and the types a
 # compiled manifest gives them: a number (TYPE_INT_DEC and TYPE_INT_HEX) and a literal
 # boolean (TYPE_INT_BOOLEAN, all ones for true).
@@ -2702,29 +2706,37 @@ def manifest_debuggable(manifest: bytes) -> bool:
 def check_pinner_overlay(
     archive: zipfile.ZipFile, infos: dict[str, zipfile.ZipInfo]
 ) -> None:
-    """The home pin overlay is built for SDK 28 or lower and carries the pin size it sets."""
-    info = infos.get(PINNER_OVERLAY)
+    """The home pin and corner overlays are built for SDK 28 or lower and carry what they set."""
+    check_sdk28_overlay(archive, infos, PINNER_OVERLAY, PINNER_OVERLAY_RESOURCE)
+    check_sdk28_overlay(archive, infos, CORNERS_OVERLAY, CORNERS_OVERLAY_RESOURCE)
+
+
+def check_sdk28_overlay(
+    archive: zipfile.ZipFile, infos: dict[str, zipfile.ZipInfo], entry: str, resource: bytes
+) -> None:
+    """An overlay of a resource the platform does not declare overlayable targets SDK 28 or lower."""
+    info = infos.get(entry)
     if info is None:
-        fail(f"{PINNER_OVERLAY} is missing")
+        fail(f"{entry} is missing")
     try:
         with zipfile.ZipFile(io.BytesIO(read_small(archive, info))) as overlay:
             manifest = overlay.read("AndroidManifest.xml")
             table = overlay.read("resources.arsc")
     except (KeyError, OSError, zipfile.BadZipFile) as error:
-        fail(f"{PINNER_OVERLAY} has no readable manifest and resource table: {error}")
+        fail(f"{entry} has no readable manifest and resource table: {error}")
     try:
         target = manifest_target_sdk(manifest)
     except (ValueError, struct.error) as error:
-        fail(f"{PINNER_OVERLAY} has an unreadable manifest: {error}")
+        fail(f"{entry} has an unreadable manifest: {error}")
     if target is None or target > PINNER_OVERLAY_MAX_TARGET_SDK:
         fail(
-            f"{PINNER_OVERLAY} targets SDK {target}: PinnerService's pin sizes are not overlayable, so "
+            f"{entry} targets SDK {target}: the resource it sets is not overlayable, so "
             f"the overlay applies only when it targets {PINNER_OVERLAY_MAX_TARGET_SDK} or lower "
             "(its Android.bp builds it with sdk_version \"28\")"
         )
     # Resource names sit in the table's key string pool as UTF-8 or UTF-16.
-    if PINNER_OVERLAY_RESOURCE not in table and PINNER_OVERLAY_RESOURCE.decode().encode("utf-16-le") not in table:
-        fail(f"{PINNER_OVERLAY} does not set {PINNER_OVERLAY_RESOURCE.decode()}")
+    if resource not in table and resource.decode().encode("utf-16-le") not in table:
+        fail(f"{entry} does not set {resource.decode()}")
 
 
 # The permission that lets an application start Android's trade-in mode (TradeInModeService in
