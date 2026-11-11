@@ -41,6 +41,13 @@ bool cpu_engine_available(EngineKind kind) noexcept
 	return false;
 }
 
+#ifndef UML_APP_STORE_RUNTIME
+bool claim_debugger_jit_memory() noexcept
+{
+	return arm64::detail::claim_debugger_jit_memory();
+}
+#endif
+
 HostCapabilities engine_host_capabilities(
 	EngineKind kind, HostCapabilities host) noexcept
 {

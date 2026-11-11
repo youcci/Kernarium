@@ -6,6 +6,7 @@
 #include "cpu/arm64/jit/jit_cache_geometry.hpp"
 #include "cpu/arm64/jit/jit_executor.hpp"
 #include "cpu/arm64/jit/jit_executor_pool.hpp"
+#include "cpu/jit_memory/executable_memory.hpp"
 
 #include <memory>
 
@@ -91,5 +92,12 @@ bool native_jit_engine_available() noexcept
 {
 	return native_jit_available();
 }
+
+#ifndef UML_APP_STORE_RUNTIME
+bool claim_debugger_jit_memory() noexcept
+{
+	return jit_memory::claim_from_debugger();
+}
+#endif
 
 } // namespace uml::cpu::arm64::detail

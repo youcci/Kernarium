@@ -557,6 +557,14 @@ int kernarium_runtime_automation_job_at_start(void);
 KERNARIUM_RUNTIME_EXPORT
 int kernarium_runtime_automation_hold_delay_ms(void);
 
+/* A development extension, found the same way, which an App Store runtime
+ * does not export: the iPhone's route to the JIT engine. The application calls
+ * it on a thread of its own before it asks StikDebug to attach; it waits,
+ * within a bound, for that debugger, takes the JIT's memory from it and
+ * detaches it. Nonzero when the next guest's automatic engine is the JIT. */
+KERNARIUM_RUNTIME_EXPORT
+int kernarium_runtime_claim_debugger_jit_memory(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -24,6 +24,20 @@ inline constexpr unsigned maximum_guest_cpu_count = 64;
 [[nodiscard]] bool execution_engine_available(
 	ExecutionEngine engine) noexcept;
 
+/* The engine a selection runs: itself, or the one automatic resolves to now. */
+[[nodiscard]] ExecutionEngine resolved_execution_engine(
+	ExecutionEngine engine) noexcept;
+
+#ifndef UML_APP_STORE_RUNTIME
+/* An iPhone development runtime's route to the JIT engine: waits, within a
+ * bound, for the debugger the application asked StikDebug for, and takes the
+ * JIT's memory from it (cpu/jit_memory/executable_memory.hpp). Call it before
+ * asking, on a thread that may wait. False where there is no such route, and
+ * the automatic engine is then the gadget engine.
+ */
+[[nodiscard]] bool claim_debugger_jit_memory() noexcept;
+#endif
+
 /* Publishes the whole-process budget for translated-code caches and the
  * private per-executor cap. The first valid configuration owns process-wide
  * geometry; identical repeats succeed and incompatible later runs fail.

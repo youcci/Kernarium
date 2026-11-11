@@ -1,7 +1,10 @@
 # arm64 JIT engine
 
 The JIT emits native blocks for A64, A32 and T32 guest code into its executable
-arena. It runs on macOS only. The gadget engine includes none of it. Exclusives,
+arena. It runs on macOS, and on an iOS device only in a development runtime
+that took JIT memory from a debugger
+([executable code](../../../../docs/architecture.md#executable-code)). The
+gadget engine includes none of it. Exclusives,
 alignment, the SME profile, the AArch32 profile and the semantic slow path's
 role are cross-engine contracts in
 [`docs/architecture.md`](../../../../docs/architecture.md). This file records
@@ -12,7 +15,7 @@ the lowering contracts that are not obvious from the code; the
 
 | Path | Role |
 | --- | --- |
-| `jit_arena.cpp` | The executable arena. It reaches executable memory only through `cpu/jit_memory/executable_memory.cpp`. |
+| `jit_arena.cpp` | The executable arena. It reaches executable memory only through `cpu/jit_memory/executable_memory.cpp`, and writes code only at the address `jit_memory::writable` gives for it. |
 | `jit_compiler*.cpp` | Lower A64. |
 | `a32/` | Lowers A32 and T32 beside the A64 compiler and without changing it. |
 | `jit_executor*.cpp`, `jit_linking.*`, `jit_shared_translations.*` | The translation cache, the links and the shared translation tier. |
@@ -28,8 +31,8 @@ space, the shared tier opens only while two executors live and is keyed by
 guest PC, and the guest's ASLR moves every image anyway. Each exec'd process
 therefore compiles its whole startup path again, several times what it costs
 the gadget engine, and the LTP runner scales its case bounds for it
-([testing](../../../../docs/testing.md#ltp)). The JIT runs only on macOS, so the
-cold path is not optimized
+([testing](../../../../docs/testing.md#ltp)). The JIT is no shipped device's
+engine, so the cold path is not optimized
 ([history](../../../../docs/optimization-history.md#jit-cold-code-per-process)).
 
 ## Top-byte ignore

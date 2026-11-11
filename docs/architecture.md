@@ -175,6 +175,16 @@ JIT memory from a window near the host image, because generated code calls into
 it and a far buffer made x87-heavy FEXCore code about a third slower; memory
 served again may hold its old bytes.
 
+An iOS device grants an application no JIT memory. A development runtime there
+takes one fixed window from a debugger the application asks StikDebug to
+attach at launch: the owner waits for the debugger, has it prepare the window,
+maps the same pages a second time writable, and detaches. Code runs through the
+first mapping and is written through the second (`jit_memory::writable`), no
+window can be added later, and the JIT's budget is held to it. The automatic
+engine of that runtime is the JIT once the window exists and the gadget engine
+otherwise. An App Store runtime carries none of this, and the Simulator is held
+to the gadget engine too.
+
 Every product that embeds a kernel carries its ELF as a host-page-aligned
 Mach-O `__TEXT,__uml_elf` section, which the emulator runs in place: the loader
 aliases the immutable executable pages, copies only data and BSS, and rejects

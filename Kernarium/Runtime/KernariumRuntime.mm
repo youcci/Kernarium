@@ -832,8 +832,10 @@ bool immutableExt4Rootfs(const char* path)
  * single owner in the CPU layer. Both Apple products resolve that to the
  * data-only gadget engine: a device cannot publish into a MAP_JIT mapping at
  * all, and while the Simulator can, measurement rejects the JIT for the
- * browser workloads that matter (G157). The override exists so that choice
- * stays re-testable without a rebuild.
+ * browser workloads that matter (G157). The one exception is a development
+ * runtime on a device a debugger gave JIT memory
+ * (kernarium_runtime_claim_debugger_jit_memory), which resolves to the JIT.
+ * The override exists so that choice stays re-testable without a rebuild.
  */
 const char* selectedExecutionEngine()
 {
@@ -852,6 +854,23 @@ const char* selectedExecutionEngine()
     return "auto";
 #endif
 }
+
+#ifndef UML_APP_STORE_RUNTIME
+/* The name of the engine `selected` runs guest userspace under. */
+const char* runningExecutionEngine(const char* selected)
+{
+    using uml::runtime::ExecutionEngine;
+    const auto engine = std::strcmp(selected, "jit") == 0
+        ? ExecutionEngine::jit
+        : std::strcmp(selected, "gadgets") == 0
+            ? ExecutionEngine::gadgets
+            : ExecutionEngine::automatic;
+    return uml::runtime::resolved_execution_engine(engine) ==
+            ExecutionEngine::jit
+        ? "jit"
+        : "gadgets";
+}
+#endif
 
 /* Whether quiescing also hibernates the guest's RAM. "auto" is what the
  * emulator decides, which is a physical device, the one host that wires guest
@@ -1752,6 +1771,11 @@ int runtimeRun(
             dotsPerInch,
             guestMemoryMiB,
             guestProcessorCount);
+#ifndef UML_APP_STORE_RUNTIME
+        std::printf(
+            "Kernarium: guest code runs on the %s engine\n",
+            runningExecutionEngine(selectedExecutionEngine()));
+#endif
 
         AppNetwork network;
         auto networkCallbacks = network.callbacks();
@@ -2386,6 +2410,20 @@ const kernarium_runtime_api runtimeApi {
 };
 
 } // namespace
+
+#ifndef UML_APP_STORE_RUNTIME
+/* The iPhone's route to the JIT engine (see KernariumRuntime.h). */
+extern "C" KERNARIUM_RUNTIME_EXPORT int
+kernarium_runtime_claim_debugger_jit_memory(void)
+{
+    const bool claimed = uml::runtime::claim_debugger_jit_memory();
+    std::printf(
+        claimed
+            ? "Kernarium: a debugger gave this process JIT memory\n"
+            : "Kernarium: no debugger gave this process JIT memory\n");
+    return claimed ? 1 : 0;
+}
+#endif
 
 #if KERNARIUM_AUTOMATION_JOB_AT_START
 /* An automation runtime tells the application whether the launch asked for the

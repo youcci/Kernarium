@@ -12,5 +12,8 @@ namespace uml::cpu::arm64::detail {
 [[nodiscard]] std::unique_ptr<CpuEngine> make_jit_engine(
 	EngineConfiguration configuration);
 [[nodiscard]] bool native_jit_engine_available() noexcept;
+#ifndef UML_APP_STORE_RUNTIME
+[[nodiscard]] bool claim_debugger_jit_memory() noexcept;
+#endif
 
 } // namespace uml::cpu::arm64::detail

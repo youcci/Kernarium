@@ -12,6 +12,12 @@ namespace uml::cpu {
 
 [[nodiscard]] bool cpu_engine_available(EngineKind kind) noexcept;
 
+#ifndef UML_APP_STORE_RUNTIME
+/* The iPhone's route to the JIT engine's memory
+ * (jit_memory::claim_from_debugger); false on every other product. */
+[[nodiscard]] bool claim_debugger_jit_memory() noexcept;
+#endif
+
 /* The host an engine of `kind` presents the virtual CPU for: `host` less
  * the parts of the SME profile the engine does not implement
  * (arm64::sme_host_for_support) and less every non-streaming SVE token

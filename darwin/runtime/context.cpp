@@ -528,6 +528,22 @@ bool provide_memory_domain(std::uint64_t &domain) noexcept
 } // namespace
 
 
+ExecutionEngine resolved_execution_engine(ExecutionEngine engine) noexcept
+{
+	return engine == ExecutionEngine::automatic ? resolve_automatic() : engine;
+}
+
+#ifndef UML_APP_STORE_RUNTIME
+bool claim_debugger_jit_memory() noexcept
+{
+#if DARWIN_UML_X86_64_USERSPACE_ONLY
+	return false;
+#else
+	return ::uml::cpu::claim_debugger_jit_memory();
+#endif
+}
+#endif
+
 bool set_translation_cache_budget(std::size_t total_bytes,
 	unsigned executors, std::size_t per_executor_bytes) noexcept
 {
