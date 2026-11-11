@@ -551,6 +551,8 @@ REQUIRED_FEATURE_NAMES = {
     "android.hardware.touchscreen.multitouch.jazzhand",
     "android.hardware.sensor.accelerometer",
     "android.hardware.sensor.gyroscope",
+    "android.hardware.sensor.compass",
+    "android.hardware.sensor.barometer",
     "android.hardware.location",
     "android.hardware.location.gps",
     "android.hardware.microphone",
@@ -2627,10 +2629,20 @@ def check_cas_hal(archive: zipfile.ZipFile, infos: dict[str, zipfile.ZipInfo]) -
             fail(f"the ClearKey CAS plugin is missing: {plugin}")
 
 
+# The sensors the motion backend lists, by the names it gives them. The product declares a
+# feature for each, so a backend without one would leave a declared sensor absent.
+MOTION_BACKEND = "VENDOR/lib64/hw/android.hardware.sensors@2.1-impl.andarium.so"
+MOTION_SENSORS = (b"Host Accelerometer", b"Host Gyroscope", b"Host Magnetometer", b"Host Barometer")
+
+
 def check_motion_sensors(archive: zipfile.ZipFile, infos: dict[str, zipfile.ZipInfo]) -> None:
     configuration = read_small(archive, infos["VENDOR/etc/sensors/hals.conf"]).decode().strip()
     if configuration != "/vendor/lib64/hw/android.hardware.sensors@2.1-impl.andarium.so":
         fail("motion multi-HAL must load only the Andarium backend")
+    backend = read_small(archive, infos[MOTION_BACKEND])
+    for sensor in MOTION_SENSORS:
+        if sensor + b"\0" not in backend:
+            fail(f"motion backend {MOTION_BACKEND} does not list the {sensor.decode()}")
     fragment = ET.fromstring(read_small(
         archive, infos["VENDOR/etc/vintf/manifest/android.hardware.sensors-multihal.xml"]
     ))

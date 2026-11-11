@@ -47,19 +47,33 @@ public:
           worker_([this](std::stop_token stop) { serve(stop); }) {}
 
     Return<void> getSensorsList_2_1(getSensorsList_2_1_cb callback) override {
+        // The host's barometer reports about once a second, at no rate the
+        // host can set.
+        struct Description {
+            const char* name;
+            float maxRange;
+            float resolution;
+            int32_t minDelay;
+        };
+        static constexpr std::array<Description, andarium::motion::sensor_count> descriptions{{
+            {"Host Accelerometer", 156.9064f, 0.001f, 10'000},
+            {"Host Gyroscope", 34.9066f, 0.001f, 10'000},
+            {"Host Magnetometer", 4900.0f, 0.1f, 10'000},
+            {"Host Barometer", 1100.0f, 0.01f, 1'000'000},
+        }};
         hidl_vec<V2_1::SensorInfo> sensors;
-        sensors.resize(2);
+        sensors.resize(descriptions.size());
         for (size_t i = 0; i < sensors.size(); ++i) {
             auto& sensor = sensors[i];
             sensor.sensorHandle = i + 1;
-            sensor.name = i == 0 ? "Host Accelerometer" : "Host Gyroscope";
+            sensor.name = descriptions[i].name;
             sensor.vendor = "Andarium";
             sensor.version = 1;
-            sensor.type = i == 0 ? SensorType::ACCELEROMETER : SensorType::GYROSCOPE;
-            sensor.maxRange = i == 0 ? 156.9064f : 34.9066f;
-            sensor.resolution = 0.001f;
+            sensor.type = static_cast<SensorType>(andarium::motion::sensor_types[i]);
+            sensor.maxRange = descriptions[i].maxRange;
+            sensor.resolution = descriptions[i].resolution;
             sensor.power = 0.5f;
-            sensor.minDelay = 10'000;
+            sensor.minDelay = descriptions[i].minDelay;
             sensor.maxDelay = 1'000'000;
             // Continuous, non-wake-up, no FIFO, injection or direct channel.
             sensor.flags = 0;
@@ -80,7 +94,7 @@ public:
         return mode == OperationMode::NORMAL ? Result::OK : Result::BAD_VALUE;
     }
     Return<Result> activate(int32_t handle, bool enabled) override {
-        if (handle < 1 || handle > 2) return Result::BAD_VALUE;
+        if (!valid(handle)) return Result::BAD_VALUE;
         std::lock_guard lock(mutex_);
         auto& state = states_[handle - 1];
         const bool changed = state.active != enabled;
@@ -90,7 +104,7 @@ public:
         return Result::OK;
     }
     Return<Result> batch(int32_t handle, int64_t period, int64_t latency) override {
-        if (handle < 1 || handle > 2 || period < 0 || latency < 0) return Result::BAD_VALUE;
+        if (!valid(handle) || period < 0 || latency < 0) return Result::BAD_VALUE;
         std::lock_guard lock(mutex_);
         auto& state = states_[handle - 1];
         const auto previous = state.period;
@@ -102,7 +116,7 @@ public:
         return Result::OK;
     }
     Return<Result> flush(int32_t handle) override {
-        if (handle < 1 || handle > 2) return Result::BAD_VALUE;
+        if (!valid(handle)) return Result::BAD_VALUE;
         std::lock_guard lock(mutex_);
         if (!states_[handle - 1].active || !callback_) return Result::BAD_VALUE;
         Event event{};
@@ -126,13 +140,17 @@ public:
     Return<void> debug(const hidl_handle& fd, const hidl_vec<hidl_string>&) override {
         if (fd.getNativeHandle() && fd->numFds > 0) {
             std::lock_guard lock(mutex_);
-            dprintf(fd->data[0], "Andarium motion: accelerometer=%d gyroscope=%d\n",
-                    states_[0].active, states_[1].active);
+            dprintf(fd->data[0],
+                    "Andarium motion: accelerometer=%d gyroscope=%d magnetometer=%d barometer=%d\n",
+                    states_[0].active, states_[1].active, states_[2].active, states_[3].active);
         }
         return Void();
     }
 
 private:
+    static bool valid(int32_t handle) {
+        return handle >= 1 && handle <= int32_t(andarium::motion::sensor_count);
+    }
     // Tells the host which sensors applications use and how often, on the
     // connection it made. The frame is the whole state, so a later frame
     // replaces an earlier one. Called with mutex_ held. A frame that cannot
@@ -141,8 +159,13 @@ private:
     // again and the state is sent on that connection.
     void sendControl() {
         if (peer_ < 0) return;
-        const auto frame = andarium::motion::encode_control(
-            {states_[0].active, states_[1].active}, {states_[0].period, states_[1].period});
+        std::array<bool, andarium::motion::sensor_count> active{};
+        std::array<int64_t, andarium::motion::sensor_count> period{};
+        for (size_t i = 0; i < states_.size(); ++i) {
+            active[i] = states_[i].active;
+            period[i] = states_[i].period;
+        }
+        const auto frame = andarium::motion::encode_control(active, period);
         const auto sent = send(peer_, frame.data(), frame.size(), MSG_DONTWAIT | MSG_NOSIGNAL);
         if (sent != static_cast<ssize_t>(frame.size())) {
             ALOGW("Andarium motion: control frame not sent (%zd): %s", sent, strerror(errno));
@@ -165,7 +188,8 @@ private:
         callback_->postEvents({event}, callback_->createScopedWakelock(false));
     }
     void consume(const andarium::motion::Sample& sample) {
-        const auto index = sample.type == 1 ? 0 : 1;
+        // decode() accepts only the protocol's sensors.
+        const auto index = *andarium::motion::sensor_index(sample.type);
         std::lock_guard lock(mutex_);
         auto& state = states_[index];
         if (!callback_ || !state.active) return;
@@ -179,10 +203,14 @@ private:
         event.sensorHandle = index + 1;
         event.sensorType = static_cast<SensorType>(sample.type);
         event.timestamp = timestamp;
-        event.u.vec3.x = sample.values[0];
-        event.u.vec3.y = sample.values[1];
-        event.u.vec3.z = sample.values[2];
-        event.u.vec3.status = V1_0::SensorStatus::ACCURACY_HIGH;
+        if (event.sensorType == SensorType::PRESSURE) {
+            event.u.scalar = sample.values[0];
+        } else {
+            event.u.vec3.x = sample.values[0];
+            event.u.vec3.y = sample.values[1];
+            event.u.vec3.z = sample.values[2];
+            event.u.vec3.status = V1_0::SensorStatus::ACCURACY_HIGH;
+        }
         post(event);
     }
     // Blocks until fd is readable, with no timeout: the service is started at
@@ -246,7 +274,7 @@ private:
     }
     std::mutex mutex_;
     android::sp<IHalProxyCallback> callback_;
-    std::array<SensorState, 2> states_{};
+    std::array<SensorState, andarium::motion::sensor_count> states_{};
     int peer_ = -1;
     // Declared before the worker, so it outlives the join in the worker's
     // destructor, which requests a stop and so writes to it.

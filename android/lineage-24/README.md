@@ -151,15 +151,18 @@ layout once, so a guest created earlier keeps its home screen.
 ### Motion sensors
 
 The product installs Android's AIDL multi-HAL service and a motion sub-HAL
-(`overlay/sensors/`) advertising an accelerometer and a gyroscope with
-continuous delivery and 10 ms minimum periods. Andarium supplies samples only
-while its Gyroscope switch is on and an application uses the sensor. The sub-HAL
+(`overlay/sensors/`) advertising an accelerometer, a gyroscope and a
+magnetometer with continuous delivery and 10 ms minimum periods, and a
+barometer that reports once a second. Andarium supplies samples only
+while its Gyroscope switch is on and an application uses the sensor; a host
+without a compass or a barometer supplies none for it. The sub-HAL
 accepts a single stream on vsock port 5556 from host CID 2 (no guest-originated
 source) and tells the host which sensors are active.
 `overlay/sensors/motion_protocol.hpp` and
 `Andarium/AndariumCore/Sources/AndariumCore/MotionStream.swift` own the wire
 format. Axes match the mounted virtual display, Core Motion acceleration is
-multiplied by -9.80665, and events carry the guest's `CLOCK_BOOTTIME` at receipt:
+multiplied by -9.80665, the magnetic field is in microtesla and the pressure in
+hectopascals, and events carry the guest's `CLOCK_BOOTTIME` at receipt:
 a live input path, not a synchronized recording. Andarium's
 [scene policy](../../Andarium/README.md#devices) describes windowed operation.
 

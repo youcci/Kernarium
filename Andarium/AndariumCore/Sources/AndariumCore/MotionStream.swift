@@ -4,12 +4,18 @@ import Darwin
 import Foundation
 
 /// Private host-to-guest motion protocol on vsock 5556. Each 20-byte record is
-/// little endian: "ANS1", Android sensor type (1 or 4), three IEEE float32 SI
-/// values. The guest timestamps receipt in its own CLOCK_BOOTTIME domain. The
+/// little endian: "ANS1", Android sensor type (1, 4, 2 or 6), three IEEE
+/// float32 in the sensor's Android unit: metres per second squared, radians
+/// per second, microtesla, or the pressure in hectopascals followed by two
+/// zeros. The guest timestamps receipt in its own CLOCK_BOOTTIME domain. The
 /// guest answers on the same connection with `MotionDemand` frames, which say
 /// which sensors an application uses.
 public struct MotionSample: Sendable {
-    public enum Sensor: UInt32, Sendable { case accelerometer = 1, gyroscope = 4 }
+    /// The sensors by their Android sensor type, in the order the protocol's
+    /// masks and lists use.
+    public enum Sensor: UInt32, Sendable, CaseIterable {
+        case accelerometer = 1, gyroscope = 4, magnetometer = 2, barometer = 6
+    }
     /// The host interface orientation the virtual device is mounted to
     /// (`MotionMount` decides when it changes).
     public enum Axes: Equatable, Sendable { case portrait, portraitUpsideDown, landscapeLeft, landscapeRight }
@@ -20,8 +26,14 @@ public struct MotionSample: Sendable {
 
     public init(sensor: Sensor, x: Double, y: Double, z: Double, axes: Axes = .portrait) {
         self.sensor = sensor
+        // A pressure has no axes: it is the first value as it is.
+        guard sensor != .barometer else {
+            (self.x, self.y, self.z) = (Float(x), 0, 0)
+            return
+        }
         // Core Motion reports gravity in g with the opposite acceleration
-        // sign to Android. Both use right-handed, fixed device axes.
+        // sign to Android. Both use right-handed, fixed device axes, and the
+        // rotation rate and the magnetic field are the same vectors in both.
         let scale = sensor == .accelerometer ? -9.80665 : 1.0
         let (horizontal, vertical): (Double, Double) = switch axes {
         case .portrait: (x, y)

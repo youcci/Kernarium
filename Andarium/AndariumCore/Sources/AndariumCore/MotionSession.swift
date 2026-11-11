@@ -4,11 +4,16 @@ import Foundation
 
 /// The device's motion sensors as a session drives them. Each sensor is
 /// started at an interval or stopped; `handler` is called on a queue of the
-/// device's own with the reading in the device's own units, and `failure`
-/// when the device can no longer be read.
+/// device's own with the reading in the device's own units (the magnetic
+/// field in microtesla, the pressure in hectopascals as the first value), and
+/// `failure` when the device can no longer be read. A magnetometer or a
+/// barometer that cannot be read delivers nothing instead: the guest sees a
+/// sensor without events, and the other sensors keep running.
 public protocol MotionDevice: AnyObject, Sendable {
     var hasAccelerometer: Bool { get }
     var hasGyroscope: Bool { get }
+    var hasMagnetometer: Bool { get }
+    var hasBarometer: Bool { get }
     /// Starts the sensor, or restarts it at the new interval if it runs.
     func start(
         _ sensor: MotionSample.Sensor, interval: TimeInterval,
@@ -16,6 +21,11 @@ public protocol MotionDevice: AnyObject, Sendable {
         failure: @escaping @Sendable () -> Void
     )
     func stop(_ sensor: MotionSample.Sensor)
+}
+
+public extension MotionDevice {
+    var hasMagnetometer: Bool { false }
+    var hasBarometer: Bool { false }
 }
 
 /// Why the guest is not getting the device's motion.
@@ -131,7 +141,7 @@ public final class MotionSession: @unchecked Sendable {
 
     private func endRun() {
         run &+= 1
-        for sensor in [MotionSample.Sensor.accelerometer, .gyroscope] where applied.interval(of: sensor) != nil {
+        for sensor in MotionSample.Sensor.allCases where applied.interval(of: sensor) != nil {
             device.stop(sensor)
         }
         applied = .off
@@ -147,7 +157,7 @@ public final class MotionSession: @unchecked Sendable {
         let current = run
         let epoch = streamEpoch
         let axes = axes
-        for sensor in [MotionSample.Sensor.accelerometer, .gyroscope] {
+        for sensor in MotionSample.Sensor.allCases {
             let wanted = hasSensor(sensor) ? plan.interval(of: sensor) : nil
             guard wanted != applied.interval(of: sensor) else { continue }
             if let wanted {
@@ -163,10 +173,7 @@ public final class MotionSession: @unchecked Sendable {
             } else {
                 device.stop(sensor)
             }
-            switch sensor {
-            case .accelerometer: applied.accelerometer = wanted
-            case .gyroscope: applied.gyroscope = wanted
-            }
+            applied.set(wanted, of: sensor)
         }
     }
 
@@ -174,6 +181,8 @@ public final class MotionSession: @unchecked Sendable {
         switch sensor {
         case .accelerometer: device.hasAccelerometer
         case .gyroscope: device.hasGyroscope
+        case .magnetometer: device.hasMagnetometer
+        case .barometer: device.hasBarometer
         }
     }
 }

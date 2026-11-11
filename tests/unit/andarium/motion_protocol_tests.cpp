@@ -28,20 +28,38 @@ int main()
     bytes[10] = 0xc0; // Neither is NaN.
     require(!andarium::motion::decode(bytes));
 
+    // The magnetic field in microtesla and the pressure in hectopascals are
+    // records of the same form; the pressure is the first value.
+    bytes = {'A', 'N', 'S', '1', 2, 0, 0, 0,
+             0, 0, 0xa0, 0x41, 0, 0, 0x20, 0xc2, 0, 0, 0, 0}; // 20, -40, 0
+    auto field = andarium::motion::decode(bytes);
+    require(field.has_value() && field->type == 2);
+    require(field->values == std::array<float, 3>{20, -40, 0});
+    bytes = {'A', 'N', 'S', '1', 6, 0, 0, 0,
+             0, 0x50, 0x7d, 0x44, 0, 0, 0, 0, 0, 0, 0, 0}; // 1013.25
+    auto pressure = andarium::motion::decode(bytes);
+    require(pressure.has_value() && pressure->type == 6);
+    require(pressure->values[0] == 1013.25f);
+    using andarium::motion::sensor_index;
+    require(sensor_index(1) == 0 && sensor_index(4) == 1 && sensor_index(2) == 2 &&
+            sensor_index(6) == 3 && !sensor_index(3));
+
     // Independent control frame fixtures: the accelerometer alone at 20 ms
-    // (the gyroscope's period is carried and not read), then both, at 66 667
-    // us and 1 s.
+    // (the other periods are carried and not read), then all four, at 66.7 ms,
+    // 1 s, 20 ms and 1 s, in units of 100 us.
     using andarium::motion::encode_control;
-    require(encode_control({true, false}, {20'000'000, 10'000'000}) ==
-            std::array<uint8_t, 16>{'A', 'N', 'C', '1', 1, 0, 0, 0,
-                                    0x20, 0x4e, 0, 0, 0x10, 0x27, 0, 0});
-    require(encode_control({true, true}, {66'667'000, 1'000'000'000}) ==
-            std::array<uint8_t, 16>{'A', 'N', 'C', '1', 3, 0, 0, 0,
-                                    0x6b, 0x04, 0x01, 0, 0x40, 0x42, 0x0f, 0});
+    const int64_t ms = 1'000'000;
+    require(encode_control({true, false, false, false}, {20 * ms, 10 * ms, 10 * ms, 10 * ms}) ==
+            std::array<uint8_t, 16>{'A', 'N', 'C', '2', 1, 0, 0, 0,
+                                    0xc8, 0, 0x64, 0, 0x64, 0, 0x64, 0});
+    require(encode_control({true, true, true, true}, {66'667'000, 1000 * ms, 20 * ms, 1000 * ms}) ==
+            std::array<uint8_t, 16>{'A', 'N', 'C', '2', 0x0f, 0, 0, 0,
+                                    0x9a, 0x02, 0x10, 0x27, 0xc8, 0, 0x10, 0x27});
     // Nothing in use, and periods the sensor framework would never ask for,
     // which the frame brings into 10 ms to 1 s.
-    require(encode_control({false, false}, {0, 5'000'000'000}) ==
-            std::array<uint8_t, 16>{'A', 'N', 'C', '1', 0, 0, 0, 0,
-                                    0x10, 0x27, 0, 0, 0x40, 0x42, 0x0f, 0});
-    require(encode_control({false, true}, {10'000'000, 10'000'000})[4] == 2);
+    require(encode_control({false, false, false, false}, {0, 5000 * ms, 0, 0}) ==
+            std::array<uint8_t, 16>{'A', 'N', 'C', '2', 0, 0, 0, 0,
+                                    0x64, 0, 0x10, 0x27, 0x64, 0, 0x64, 0});
+    require(encode_control({false, false, true, false}, {10 * ms, 10 * ms, 10 * ms, 10 * ms})[4] == 4);
+    require(encode_control({false, false, false, true}, {10 * ms, 10 * ms, 10 * ms, 10 * ms})[4] == 8);
 }

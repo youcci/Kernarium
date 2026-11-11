@@ -8,6 +8,8 @@
 	<false/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Andarium gives Android this device’s location only while an app in the guest is using location.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>Andarium reads this device’s barometer only while an app in the guest is using the pressure sensor.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

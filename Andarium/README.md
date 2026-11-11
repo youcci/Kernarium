@@ -249,9 +249,11 @@ requires reopening Andarium.
   the system image makes Android's
   [display cutout and corners](../android/lineage-24/README.md#display-shape).
   Recovery, and every display on an iPad, keep to the safe area.
-- **Motion.** Gyroscope needs no permission. The host reads a sensor only while
-  a guest application uses it and sends samples over private vsock port 5556;
-  the system image must include the
+- **Motion.** Gyroscope shares the accelerometer, gyroscope, compass and
+  barometer. Only the barometer needs a permission: iOS asks for Motion &
+  Fitness access the first time a guest application reads it. The host reads a
+  sensor only while a guest application uses it and sends samples over private
+  vsock port 5556; the system image must include the
   [motion sub-HAL](../android/lineage-24/README.md#motion-sensors).
 - **Location.** The guest's location is the device's: while the guest is in
   front, the host holds private vsock port 5558 to the system image's

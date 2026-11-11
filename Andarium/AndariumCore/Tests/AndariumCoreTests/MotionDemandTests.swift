@@ -31,6 +31,25 @@ struct MotionDemandTests {
         #expect(try #require(MotionDemand(frame: none)).isIdle)
     }
 
+    @Test func aFrameOfTheFourSensorServiceCarriesTheCompassAndTheBarometer() throws {
+        // Independent wire fixture: all four, at 66.7 ms, 1 s, 20 ms and 1 s, in units of 100 us.
+        let all = Data([0x41, 0x4e, 0x43, 0x32, 0x0f, 0, 0, 0, 0x9a, 0x02, 0x10, 0x27, 0xc8, 0, 0x10, 0x27])
+        #expect(MotionDemand(frame: all) == MotionDemand(
+            accelerometer: 66_600, gyroscope: 1_000_000, magnetometer: 20_000, barometer: 1_000_000))
+        // The magnetometer alone; the other periods are not read.
+        let compass = Data([0x41, 0x4e, 0x43, 0x32, 4, 0, 0, 0, 1, 0, 1, 0, 0xc8, 0, 1, 0])
+        #expect(MotionDemand(frame: compass) == MotionDemand(magnetometer: 20_000))
+        let none = Data([0x41, 0x4e, 0x43, 0x32, 0, 0, 0, 0, 0x64, 0, 0x64, 0, 0x64, 0, 0x64, 0])
+        #expect(try #require(MotionDemand(frame: none)).isIdle)
+        // A period outside the range is brought into it, and a fifth sensor is not the protocol.
+        let fast = Data([0x41, 0x4e, 0x43, 0x32, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0])
+        #expect(MotionDemand(frame: fast) == MotionDemand(barometer: 10_000))
+        let fifth = Data([0x41, 0x4e, 0x43, 0x32, 0x10, 0, 0, 0, 0x64, 0, 0x64, 0, 0x64, 0, 0x64, 0])
+        #expect(MotionDemand(frame: fifth) == nil)
+        // The earlier frame has no bits for them.
+        #expect(MotionDemand(frame: frame(mask: 8, accelerometer: [0, 0, 0, 0], gyroscope: [0, 0, 0, 0])) == nil)
+    }
+
     @Test func aPeriodOutsideTheRangeIsBroughtIntoIt() throws {
         let fast = frame(mask: 1, accelerometer: [0, 0, 0, 0], gyroscope: [0, 0, 0, 0])
         #expect(MotionDemand(frame: fast) == MotionDemand(accelerometer: 10_000))
@@ -44,7 +63,7 @@ struct MotionDemandTests {
         #expect(MotionDemand(frame: good.dropLast()) == nil)
         #expect(MotionDemand(frame: good + [0]) == nil)
         var wrong = good
-        wrong[3] = 0x32
+        wrong[3] = 0x33
         #expect(MotionDemand(frame: wrong) == nil)
         // The sample record's own magic is not a frame.
         wrong[2] = 0x53
@@ -131,15 +150,19 @@ struct MotionDemandTests {
     private final class FakeDevice: MotionDevice, @unchecked Sendable {
         let hasAccelerometer: Bool
         let hasGyroscope: Bool
+        let hasMagnetometer: Bool
+        let hasBarometer: Bool
         private let lock = NSLock()
         private var running: [MotionSample.Sensor: TimeInterval] = [:]
         private var handlers: [MotionSample.Sensor: @Sendable (Double, Double, Double) -> Void] = [:]
         private var failures: [@Sendable () -> Void] = []
         private(set) var starts = 0
 
-        init(accelerometer: Bool = true, gyroscope: Bool = true) {
+        init(accelerometer: Bool = true, gyroscope: Bool = true, magnetometer: Bool = true, barometer: Bool = true) {
             hasAccelerometer = accelerometer
             hasGyroscope = gyroscope
+            hasMagnetometer = magnetometer
+            hasBarometer = barometer
         }
 
         func start(
@@ -196,6 +219,17 @@ struct MotionDemandTests {
             var bytes: [UInt8] = [0x41, 0x4e, 0x43, 0x31, mask, 0, 0, 0]
             for period in [demand.accelerometer ?? 10_000, demand.gyroscope ?? 10_000] {
                 bytes += (0..<4).map { UInt8((period >> UInt32(8 * $0)) & 0xff) }
+            }
+            if let end = current { _ = write(end, bytes, bytes.count) }
+        }
+
+        /// The service of an image with the compass and the barometer says what it needs.
+        func sayAll(_ demand: MotionDemand) {
+            var bytes: [UInt8] = [0x41, 0x4e, 0x43, 0x32, 0, 0, 0, 0]
+            for (index, sensor) in MotionSample.Sensor.allCases.enumerated() {
+                if demand.period(of: sensor) != nil { bytes[4] |= UInt8(1 << index) }
+                let units = (demand.period(of: sensor) ?? 10_000) / 100
+                bytes += [UInt8(units & 0xff), UInt8(units >> 8)]
             }
             if let end = current { _ = write(end, bytes, bytes.count) }
         }
@@ -257,6 +291,36 @@ struct MotionDemandTests {
         _ guest: FakeGuest, _ device: FakeDevice, problems: Problems = Problems()
     ) -> MotionSession {
         MotionSession(opener: guest, device: device, retryDelay: .milliseconds(40), problem: problems.record)
+    }
+
+    @Test func theCompassAndTheBarometerRunOnlyForAServiceThatAsksForThem() throws {
+        let guest = FakeGuest()
+        let device = FakeDevice()
+        let session = session(guest, device)
+        session.update(enabled: true, foreground: true, axes: .landscapeLeft)
+        defer { session.update(enabled: false, foreground: false, axes: .landscapeLeft) }
+        // A service that says nothing has only the first two sensors.
+        #expect(eventually { device.intervals == [.accelerometer: 0.01, .gyroscope: 0.01] })
+        guest.sayAll(MotionDemand(magnetometer: 20_000, barometer: 1_000_000))
+        #expect(eventually { device.intervals == [.magnetometer: 0.01, .barometer: 0.5] })
+        // The field turns with the mounting; the pressure does not.
+        device.emit(.magnetometer, 1, 2, 3)
+        let field = try #require(MotionSample(sensor: .magnetometer, x: 1, y: 2, z: 3, axes: .landscapeLeft).encoded)
+        #expect(guest.receive(count: field.count) == field)
+        device.emit(.barometer, 1013.25, 0, 0)
+        let pressure = try #require(MotionSample(sensor: .barometer, x: 1013.25, y: 0, z: 0).encoded)
+        #expect(guest.receive(count: pressure.count) == pressure)
+        guest.sayAll(MotionDemand(accelerometer: 20_000))
+        #expect(eventually { device.intervals == [.accelerometer: 0.01] })
+        // A device without them starts neither, whatever the service asks.
+        let bare = FakeDevice(magnetometer: false, barometer: false)
+        let other = FakeGuest()
+        let second = self.session(other, bare)
+        second.update(enabled: true, foreground: true, axes: .portrait)
+        defer { second.update(enabled: false, foreground: false, axes: .portrait) }
+        #expect(eventually { bare.intervals == [.accelerometer: 0.01, .gyroscope: 0.01] })
+        other.sayAll(MotionDemand(gyroscope: 20_000, magnetometer: 20_000, barometer: 1_000_000))
+        #expect(eventually { bare.intervals == [.gyroscope: 0.01] })
     }
 
     @Test func aServiceThatNeverSpeaksIsReadContinuouslyAndItsSamplesArrive() throws {

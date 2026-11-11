@@ -31,6 +31,33 @@ struct MotionTests {
         #expect(MotionSample(sensor: .gyroscope, x: .nan, y: 0, z: 0).encoded == nil)
     }
 
+    @Test func theMagneticFieldKeepsItsMicroteslaAndTurnsWithTheAxes() throws {
+        let field = MotionSample(sensor: .magnetometer, x: 20, y: -40, z: 5)
+        #expect(field.x == 20 && field.y == -40 && field.z == 5)
+        // Independent IEEE-754 encoding of 20, -40 and 5.
+        #expect(Array(try #require(field.encoded)) == [
+            0x41, 0x4e, 0x53, 0x31, 2, 0, 0, 0,
+            0, 0, 0xa0, 0x41, 0, 0, 0x20, 0xc2, 0, 0, 0xa0, 0x40,
+        ])
+        // The same mapping as the rotation rate, in every mounting.
+        for axes in [MotionSample.Axes.landscapeLeft, .landscapeRight, .portraitUpsideDown] {
+            let turned = MotionSample(sensor: .magnetometer, x: 1, y: 2, z: 3, axes: axes)
+            let rate = MotionSample(sensor: .gyroscope, x: 1, y: 2, z: 3, axes: axes)
+            #expect(turned.x == rate.x && turned.y == rate.y && turned.z == rate.z)
+        }
+    }
+
+    @Test func aPressureIsOneValueWhateverTheAxes() throws {
+        for axes in [MotionSample.Axes.portrait, .landscapeLeft, .landscapeRight, .portraitUpsideDown] {
+            let pressure = MotionSample(sensor: .barometer, x: 1013.25, y: 0, z: 0, axes: axes)
+            // Independent IEEE-754 encoding of 1013.25 hPa.
+            #expect(Array(try #require(pressure.encoded)) == [
+                0x41, 0x4e, 0x53, 0x31, 6, 0, 0, 0,
+                0, 0x50, 0x7d, 0x44, 0, 0, 0, 0, 0, 0, 0, 0,
+            ])
+        }
+    }
+
     @Test func axesFollowTheGuestsInitialDisplayWithoutMirroringRotation() {
         for (axes, x, y) in [
             (MotionSample.Axes.landscapeLeft, Float(2), Float(-1)),

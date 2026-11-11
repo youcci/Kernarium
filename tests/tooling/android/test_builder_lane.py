@@ -761,6 +761,7 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                           missing_companion_feature: bool = False,
                           missing_midi_feature: bool = False,
                           missing_gps_feature: bool = False,
+                          missing_compass_feature: bool = False,
                           google_apps_variant: str | None = None,
                           missing_mic_policy: bool = False,
                           extra_input_device: bool = False,
@@ -2231,7 +2232,9 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                         archive.writestr(f"{artifact}.odex", b"odex")
                         archive.writestr(f"{artifact}.vdex", b"vdex")
                 archive.writestr("VENDOR/bin/hw/android.hardware.sensors-service.multihal", synthetic_aarch64_elf())
-                archive.writestr("VENDOR/lib64/hw/android.hardware.sensors@2.1-impl.andarium.so", synthetic_aarch64_elf())
+                archive.writestr("VENDOR/lib64/hw/android.hardware.sensors@2.1-impl.andarium.so",
+                                 synthetic_aarch64_elf() + b"Host Accelerometer\0Host Gyroscope\0"
+                                 b"Host Magnetometer\0Host Barometer\0")
                 archive.writestr("VENDOR/etc/sensors/hals.conf",
                                  "/vendor/lib64/hw/android.hardware.sensors@2.1-impl.andarium.so\n")
                 archive.writestr("VENDOR/etc/init/android.hardware.sensors-service-multihal.rc",
@@ -2266,7 +2269,10 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                 advertised_features = ["android.hardware.touchscreen",
                                        "android.hardware.sensor.accelerometer",
                                        "android.hardware.sensor.gyroscope",
+                                       "android.hardware.sensor.barometer",
                                        "android.hardware.location"]
+                if not missing_compass_feature:
+                    advertised_features.append("android.hardware.sensor.compass")
                 if not missing_gps_feature:
                     advertised_features.append("android.hardware.location.gps")
                 advertised_features.extend(
@@ -2866,6 +2872,9 @@ def verify_target_files_fixtures(verifier: Path) -> None:
              {"entries": {"VENDOR/bin/hw/android.hardware.fixture-service": synthetic_arm_elf()}}),
             ("missing-motion-backend", {"entries": {
                 "VENDOR/lib64/hw/android.hardware.sensors@2.1-impl.andarium.so": None}}),
+            ("motion-backend-without-the-compass", {"entries": {
+                "VENDOR/lib64/hw/android.hardware.sensors@2.1-impl.andarium.so":
+                    synthetic_aarch64_elf() + b"Host Accelerometer\0Host Gyroscope\0Host Barometer\0"}}),
             ("foreign-motion-backend", {"entries": {
                 "VENDOR/etc/sensors/hals.conf": b"/vendor/lib64/hw/other.so\n"}}),
             ("missing-motion-instance", {"entries": {
@@ -2969,6 +2978,7 @@ def verify_target_files_fixtures(verifier: Path) -> None:
             ("missing-companion-feature", {"missing_companion_feature": True}),
             ("missing-midi-feature", {"missing_midi_feature": True}),
             ("missing-gps-feature", {"missing_gps_feature": True}),
+            ("missing-compass-feature", {"missing_compass_feature": True}),
             ("bluetooth-reported-without-google-apps", {"entries": {
                 "VENDOR/etc/permissions/android.hardware.bluetooth.xml":
                     b'<permissions><feature name="android.hardware.bluetooth"/></permissions>'}}),
@@ -4309,6 +4319,8 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                     b'<permissions><feature name="android.hardware.bluetooth"/></permissions>'}},
              "absent hardware feature declaration is forbidden: "
              "VENDOR/etc/permissions/android.hardware.bluetooth.xml"),
+            ("missing-compass-feature-cause", {"missing_compass_feature": True},
+             "required feature is not declared: android.hardware.sensor.compass"),
             ("missing-gps-feature-cause", {"missing_gps_feature": True},
              "required feature is not declared: android.hardware.location.gps"),
             ("missing-midi-feature-cause", {"missing_midi_feature": True},
