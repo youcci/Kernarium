@@ -1,0 +1,24 @@
+tests/tooling/android/test_builder_lane.py
+  s_83f5d907de3616::t_ccf4cce435ef85 2321-2326,2697,2984-2985
+android/lineage-24/overlay/lineage_andarium.mk
+  s_83f5d907de3616::t_ccf4cce435ef85 732-735
+android/lineage-24/tools/verify-target-files.py
+  s_83f5d907de3616::t_ccf4cce435ef85 55-57,4453-4456
+  s_83f5d907de3616::t_e32258ad192b42 4457
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "55f62198e17a1ef51af01a11dec7b3f2fbec838e",
+  "prompts": {},
+  "sessions": {
+    "s_83f5d907de3616": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a5ab82a9-5d39-4921-8909-98778519fb84",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
