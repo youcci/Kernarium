@@ -1,0 +1,41 @@
+darwin/cpu/jit_memory/executable_memory.cpp
+  s_a16f104b1ec06c::t_4b6cec75d2edb5 70-72
+docs/architecture.md
+  s_a16f104b1ec06c::t_4b6cec75d2edb5 183
+  s_a16f104b1ec06c::t_2187999da0e057 184-186
+darwin/emulator/src/gpu_budget_plan.cpp
+  s_a16f104b1ec06c::t_e17b3b124e30d6 91-94,99-101
+darwin/runtime/context.cpp
+  s_a16f104b1ec06c::t_e17b3b124e30d6 536-544
+darwin/cpu/arm64/engine_adapters.hpp
+  s_a16f104b1ec06c::t_e17b3b124e30d6 6,16
+darwin/runtime/execution_engine.hpp
+  s_a16f104b1ec06c::t_e17b3b124e30d6 31-37
+darwin/emulator/src/gpu_budget_plan.hpp
+  s_a16f104b1ec06c::t_e17b3b124e30d6 43-44
+darwin/cpu/arm64/jit/engine_adapter.cpp
+  s_a16f104b1ec06c::t_e17b3b124e30d6 96-100
+tests/unit/arm64/arm64_jit_cache_geometry_tests.cpp
+  s_a16f104b1ec06c::t_4b6cec75d2edb5 5,169-181
+  s_a16f104b1ec06c::t_bb568818a72525 182
+darwin/cpu/engine_factory.cpp
+  s_a16f104b1ec06c::t_e17b3b124e30d6 44-48
+darwin/cpu/engine_factory.hpp
+  s_a16f104b1ec06c::t_e17b3b124e30d6 15-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d6da49c0a39c87ef705b5aaa869a8f16f0c6db8b",
+  "prompts": {},
+  "sessions": {
+    "s_a16f104b1ec06c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "af5893c4-3ef0-4641-a6c7-1c1413188116",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
