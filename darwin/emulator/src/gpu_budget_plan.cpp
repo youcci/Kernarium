@@ -88,11 +88,17 @@ GpuBudgetPlan plan_gpu_budget(std::uint64_t guest_memory,
 	plan.guest_memory = guest_memory;
 	plan.guest_cpus = guest_cpus;
 	plan.parameters = parameters;
+	/* A JIT window the host bounds is resident beside all of this. The JIT's
+	 * memory outside it is less than the gadget cache it runs in place of. */
+	constexpr auto unlimited = std::numeric_limits<std::uint64_t>::max();
+	const std::uint64_t jit_window = ::uml::runtime::jit_memory_bound();
 	plan.engine = ::uml::runtime::guest_memory::engine_memory(
 		::uml::runtime::gadget_cache_budget_for(
 			static_cast<std::size_t>(guest_memory),
 			gadget_cache_option, guest_cpus),
-		guest_cpus, parameters.engine_rest);
+		guest_cpus,
+		parameters.engine_rest > unlimited - jit_window ? unlimited :
+			parameters.engine_rest + jit_window);
 	plan.budget = ::uml::platform::compute_gpu_budget({
 		.process_limit = plan.process_limit,
 		.guest_memory = plan.guest_memory,

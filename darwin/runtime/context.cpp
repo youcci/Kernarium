@@ -533,6 +533,15 @@ ExecutionEngine resolved_execution_engine(ExecutionEngine engine) noexcept
 	return engine == ExecutionEngine::automatic ? resolve_automatic() : engine;
 }
 
+std::size_t jit_memory_bound() noexcept
+{
+#if DARWIN_UML_X86_64_USERSPACE_ONLY
+	return 0;
+#else
+	return ::uml::cpu::jit_memory_bound();
+#endif
+}
+
 #ifndef UML_APP_STORE_RUNTIME
 bool claim_debugger_jit_memory() noexcept
 {

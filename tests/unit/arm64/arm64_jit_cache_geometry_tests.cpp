@@ -2,6 +2,7 @@
 #include "cpu/arm64/jit/jit_cache_geometry.hpp"
 #include "cpu/arm64/jit/jit_arena.hpp"
 #include "cpu/arm64/jit/jit_linking.hpp"
+#include "cpu/gadget_cache_budget.hpp"
 #include "require.hpp"
 
 #include <algorithm>
@@ -164,6 +165,20 @@ void a_budget_held_to_a_memory_bound_fits_it()
 			require(executable <= bound / executors,
 				"an executor's arenas exceed its share of the bound");
 		}
+	}
+	/* The launch's memory plan counts an iPhone's 256 MiB window and leaves
+	 * the JIT's memory outside its arenas to the gadget cache's budget,
+	 * which a JIT run does not fill: at the vCPU counts the applications
+	 * offer that memory is within the least budget the cache gets. */
+	constexpr std::size_t window = 256U * mib;
+	for (unsigned executors = 1; executors <= 8; ++executors) {
+		const auto geometry = arm64::derive_jit_cache_geometry(
+			window, executors, window / executors);
+		require(window - executors * (geometry.arena_bytes +
+				geometry.tracked_store_arena_bytes) <=
+				::uml::cpu::gadget_cache::minimum_budget,
+			"a JIT held to the window holds more outside its arenas "
+			"than the gadget cache's least budget");
 	}
 }
 

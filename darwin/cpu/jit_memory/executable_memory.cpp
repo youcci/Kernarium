@@ -67,6 +67,9 @@ constexpr void jit_write_protect(int) {}
  * iPhone. The debugger touches every page of it, so the whole window counts
  * as resident from the start, and none can be added once the debugger has
  * left.
+ * The launch's memory plan counts it and no more, which holds while a JIT
+ * held to it keeps less outside its arenas than the gadget cache's least
+ * budget (arm64-jit-cache-geometry).
  * shortcut: one size for every guest; measure Android's arena use on the
  * phone before growing it. */
 constexpr std::size_t debugger_window_bytes = 256U * 1024U * 1024U;

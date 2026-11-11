@@ -28,6 +28,13 @@ inline constexpr unsigned maximum_guest_cpu_count = 64;
 [[nodiscard]] ExecutionEngine resolved_execution_engine(
 	ExecutionEngine engine) noexcept;
 
+/* The JIT memory the host bounds this process to, which it holds resident from
+ * the moment it has it, whatever engine runs: the window of
+ * claim_debugger_jit_memory. Zero where the host sets no bound. The launch's
+ * memory plan counts it with the guest side's memory.
+ */
+[[nodiscard]] std::size_t jit_memory_bound() noexcept;
+
 #ifndef UML_APP_STORE_RUNTIME
 /* An iPhone development runtime's route to the JIT engine: waits, within a
  * bound, for the debugger the application asked StikDebug for, and takes the

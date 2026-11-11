@@ -93,6 +93,11 @@ bool native_jit_engine_available() noexcept
 	return native_jit_available();
 }
 
+std::size_t jit_memory_bound() noexcept
+{
+	return jit_memory::capacity();
+}
+
 #ifndef UML_APP_STORE_RUNTIME
 bool claim_debugger_jit_memory() noexcept
 {

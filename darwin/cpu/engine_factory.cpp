@@ -41,6 +41,11 @@ bool cpu_engine_available(EngineKind kind) noexcept
 	return false;
 }
 
+std::size_t jit_memory_bound() noexcept
+{
+	return arm64::detail::jit_memory_bound();
+}
+
 #ifndef UML_APP_STORE_RUNTIME
 bool claim_debugger_jit_memory() noexcept
 {

@@ -12,6 +12,10 @@ namespace uml::cpu {
 
 [[nodiscard]] bool cpu_engine_available(EngineKind kind) noexcept;
 
+/* The JIT memory the host bounds this process to (jit_memory::capacity), all
+ * of it resident, or zero where the host sets no bound. */
+[[nodiscard]] std::size_t jit_memory_bound() noexcept;
+
 #ifndef UML_APP_STORE_RUNTIME
 /* The iPhone's route to the JIT engine's memory
  * (jit_memory::claim_from_debugger); false on every other product. */

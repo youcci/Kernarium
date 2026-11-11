@@ -40,7 +40,8 @@ struct GpuBudgetPlan final {
 	unsigned guest_cpus{1};
 	/* E: the gadget-cache budget the run will set
 	 * (runtime::set_gadget_cache_budget), the slot tags of the vCPUs and
-	 * E_rest (runtime/guest_memory_budget.hpp). */
+	 * E_rest (runtime/guest_memory_budget.hpp), and the JIT's window where
+	 * the host bounds JIT memory (runtime::jit_memory_bound). */
 	std::uint64_t engine{};
 	GpuBudgetParameters parameters;
 };
