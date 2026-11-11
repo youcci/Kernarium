@@ -1,0 +1,22 @@
+Andarium/AndariumCore/Sources/AndariumCore/GuestFrameStream.swift
+  s_83f5d907de3616::t_beedfd3be12995 10-12,68-71,74-88
+  s_83f5d907de3616::t_2301ad36551421 125-128
+Andarium/AndariumCore/Tests/AndariumCoreTests/VibrationTests.swift
+  s_83f5d907de3616::t_8510691ffe7661 118-149
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "139a5a7d4edb400ad7c606a1ac68f5086ddbe905",
+  "prompts": {},
+  "sessions": {
+    "s_83f5d907de3616": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a5ab82a9-5d39-4921-8909-98778519fb84",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
