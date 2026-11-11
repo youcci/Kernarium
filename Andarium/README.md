@@ -261,6 +261,11 @@ requires reopening Andarium.
   runs only while Android's location framework has that HAL started. iOS asks
   for When In Use access the first time that happens; without it the guest
   gets no fixes.
+- **Camera.** The guest's back and front cameras are the device's: while the
+  guest is in front, the host holds private vsock port 5559 to the system
+  image's [camera provider](../android/lineage-24/README.md#camera), and a
+  camera runs only while Android has it open. iOS asks for Camera access the
+  first time that happens; without it the guest gets black pictures.
 - **Vibration.** On a device with a haptic engine, the guest's vibrations play
   on it: the host holds private vsock port 5557 to the system image's
   [vibrator HAL](../android/lineage-24/README.md#vibrator) while the guest is

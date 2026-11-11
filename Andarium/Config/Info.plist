@@ -6,6 +6,8 @@
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>Andarium gives Android this device’s cameras only while an app in the guest has a camera open.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Andarium gives Android this device’s location only while an app in the guest is using location.</string>
 	<key>NSMotionUsageDescription</key>

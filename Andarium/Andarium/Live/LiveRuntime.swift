@@ -61,6 +61,7 @@ final class LiveRuntime: RuntimeDriver {
     private let motion = MotionSensors()
     private let haptics = GuestHaptics()
     private let location = GuestLocation()
+    private let camera = GuestCamera()
     /// The interface orientation the sensors' axes are mounted to.
     private var motionMount = MotionMount()
     private lazy var rotation = GuestRotationController(
@@ -544,6 +545,7 @@ final class LiveRuntime: RuntimeDriver {
         )
         haptics.update(foreground: foreground)
         location.update(foreground: foreground)
+        camera.update(foreground: foreground)
     }
 
     // MARK: Microphone
