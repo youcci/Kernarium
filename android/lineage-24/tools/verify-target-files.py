@@ -53,8 +53,9 @@ GOOGLE_APPS_APEX = "PRODUCT/apex/com.google.android.gmssystem.prodvic.apex"
 # applications that require it. The feature makes system_server start the Bluetooth service, and
 # without a HAL the Bluetooth process aborts whenever the adapter is turned on, so the first user
 # is created with the restriction under which the service never does.
+# It reports telephony, the base feature alone, for the same reason, without a phone stack.
 GOOGLE_APPS_FEATURE_NAMES = frozenset(
-    {"android.hardware.bluetooth", "android.hardware.bluetooth_le"}
+    {"android.hardware.bluetooth", "android.hardware.bluetooth_le", "android.hardware.telephony"}
 )
 GOOGLE_APPS_FEATURE_DECLARATIONS = frozenset(f"{name}.xml" for name in GOOGLE_APPS_FEATURE_NAMES)
 # The file that calls Bluetooth unavailable. The framework compiles that in and skips the feature's

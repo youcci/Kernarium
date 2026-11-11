@@ -122,10 +122,11 @@ in `metadata/lineage.env` is `none` or `present`; `present` is for a private
 build whose builder holds the package tree at `vendor/gapps`, at the Git tree
 the metadata names. Such a build carries Play services, the services framework
 and the Play Store, the build and the target-files verifier follow the setting,
-and its image must never be distributed. It also reports
-`android.hardware.bluetooth` and `android.hardware.bluetooth_le`, so the Play
-Store shows applications that require them, and has no Bluetooth: its first
-user is created with the `no_bluetooth` restriction.
+and its image must never be distributed. It also reports Bluetooth, Bluetooth
+Low Energy and telephony, so the Play Store shows applications that require
+them, and has none of them: its first user is created with the `no_bluetooth`
+restriction, and the framework is configured as a device without voice or
+mobile data. It still receives the host's text messages.
 
 ### Build variants
 

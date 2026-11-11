@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- A build with Google's applications reports telephony for the Play Store's
+     filter and has no phone stack: only the base feature, none of the radio,
+     calling, data or subscription features. Messaging is the product's own
+     (kernarium_core_hardware.xml). -->
+<permissions>
+    <feature name="android.hardware.telephony" />
+</permissions>

@@ -8,4 +8,11 @@
     <string-array translatable="false" name="config_defaultFirstUserRestrictions">
         <item>no_bluetooth</item>
     </string-array>
+    <!-- Such a build reports telephony as well and has no phone stack. It is a device
+         without voice or mobile data, so nothing offers a call or a mobile network,
+         and its time zone does not wait for an operator that never answers. It stays
+         SMS capable (overlay-priority), since the guest receives the host's messages. -->
+    <bool name="config_voice_capable">false</bool>
+    <bool name="config_mobile_data_capable">false</bool>
+    <bool name="config_enableTelephonyTimeZoneDetection">false</bool>
 </resources>

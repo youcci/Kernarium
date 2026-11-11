@@ -862,6 +862,13 @@ PRODUCT_COPY_FILES_EXCLUDE := $(filter-out $(KERNARIUM_REPORTED_BLUETOOTH),$(PRO
 PRODUCT_COPY_FILES_EXCLUDE += \
     device/google/cuttlefish/shared/bluetooth/excluded_hardware.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/bluetooth_excluded_hardware.xml
 PRODUCT_COPY_FILES += $(KERNARIUM_REPORTED_BLUETOOTH)
+# The same holds for telephony, which a permission to call or to read the
+# phone's number makes an application require. There is no phone stack, and
+# overlay-google-apps states a device without voice or mobile data, whose time
+# zone does not wait for a network operator; the host's text messages still
+# arrive (overlay/sms).
+PRODUCT_COPY_FILES += \
+    device/kernarium/andarium/config/kernarium_reported_telephony.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.telephony.xml
 PRODUCT_PACKAGE_OVERLAYS += device/kernarium/andarium/overlay-google-apps
 endif
 
