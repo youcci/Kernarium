@@ -1,0 +1,30 @@
+darwin/cpu/arm64/jit/jit_arena.cpp
+  s_a16f104b1ec06c::t_4219ef27c39175 40,101-103
+darwin/cpu/jit_memory/executable_memory.cpp
+  s_a16f104b1ec06c::t_c9144d1f2184da 383,392
+  s_a16f104b1ec06c::t_4219ef27c39175 6,8,17-22,26,28-29,31-41,43-44,47-48,53-60,62-66,70-76,78-82,85-90,92-119,154-157,184-185,207-209,216-265,283,343-345,355-358,366,384-391,394-398,401,405-406,414,421-428
+  s_a16f104b1ec06c::t_d20fdb7d54d969 67-69
+  s_a16f104b1ec06c::t_27f4a3a6cad1c1 393,429
+tests/unit/arm64/arm64_jit_memory_window_tests.cpp
+  s_a16f104b1ec06c::t_bf7bdca91f92a1 40,124-131
+darwin/cpu/jit_memory/executable_memory.hpp
+  s_a16f104b1ec06c::t_c9144d1f2184da 23-25,32
+  s_a16f104b1ec06c::t_4219ef27c39175 16-19,26-31,33-43,47-51
+  s_a16f104b1ec06c::t_731b2e0e7b9178 52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4c9624e80aad83d90bda81abd041bef99714a172",
+  "prompts": {},
+  "sessions": {
+    "s_a16f104b1ec06c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "af5893c4-3ef0-4641-a6c7-1c1413188116",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
