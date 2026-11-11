@@ -1,0 +1,19 @@
+darwin/cpu/jit_memory/executable_memory.cpp
+  s_a16f104b1ec06c::t_9cc13e5bf357d0 11,108-124,269-274,282
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "11e5650f77e01691f087bc7866c9376fb2a3c655",
+  "prompts": {},
+  "sessions": {
+    "s_a16f104b1ec06c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "af5893c4-3ef0-4641-a6c7-1c1413188116",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
