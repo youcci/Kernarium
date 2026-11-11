@@ -2260,6 +2260,9 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                             f'<feature name="android.hardware.camera{suffix}"/>'
                             for suffix in ("", ".any", ".autofocus")
                         ) + "</permissions>")
+                    archive.writestr(
+                        "VENDOR/etc/permissions/android.hardware.telephony.xml",
+                        '<permissions><feature name="android.hardware.telephony"/></permissions>')
                     if google_apps_variant != "no-bluetooth-features":
                         for feature in ("android.hardware.bluetooth", "android.hardware.bluetooth_le"):
                             archive.writestr(f"VENDOR/etc/permissions/{feature}.xml",

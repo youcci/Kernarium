@@ -48,7 +48,8 @@ GOOGLE_APPS_APEX = "PRODUCT/apex/com.google.android.gmssystem.prodvic.apex"
 # applications that require it. The feature makes system_server start the Bluetooth service, and
 # without a HAL the Bluetooth process aborts whenever the adapter is turned on, so the first user
 # is created with the restriction under which the service never does.
-# It reports a camera with autofocus for the same reason; the camera service lists none.
+# It reports a camera with autofocus for the same reason; the camera service lists none. And
+# telephony, the base feature alone, without a phone stack.
 GOOGLE_APPS_FEATURE_NAMES = frozenset(
     {
         "android.hardware.bluetooth",
@@ -56,6 +57,7 @@ GOOGLE_APPS_FEATURE_NAMES = frozenset(
         "android.hardware.camera",
         "android.hardware.camera.any",
         "android.hardware.camera.autofocus",
+        "android.hardware.telephony",
     }
 )
 GOOGLE_APPS_FEATURE_DECLARATIONS = frozenset(f"{name}.xml" for name in GOOGLE_APPS_FEATURE_NAMES)

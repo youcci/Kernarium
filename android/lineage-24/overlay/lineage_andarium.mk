@@ -738,6 +738,12 @@ PRODUCT_COPY_FILES += $(KERNARIUM_REPORTED_BLUETOOTH)
 # require together with autofocus. The camera service runs and lists none.
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.camera.autofocus.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.autofocus.xml
+# And for telephony, which a permission to call or to read the phone's number
+# makes an application require. There is no phone stack, and overlay-google-apps
+# states a device without voice, messages or mobile data, whose time zone
+# does not wait for a network operator.
+PRODUCT_COPY_FILES += \
+    device/kernarium/andarium/config/kernarium_reported_telephony.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.telephony.xml
 PRODUCT_PACKAGE_OVERLAYS += device/kernarium/andarium/overlay-google-apps
 endif
 
