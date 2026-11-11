@@ -9,8 +9,9 @@ import Foundation
 /// The runtime states it on the kernel command line at every start
 /// (`androidboot.kernarium.display_shape`, the boot request's
 /// `android_display_*` fields) and the system image's display shape script
-/// makes it Android's display cutout and corner radius, so the status bar
-/// stands beside the cutout and nothing is laid out under a corner
+/// enables the overlays that fit it, the cutout of its class and the padding
+/// beside a corner, so the status bar stands beside the cutout and clear of
+/// the corners
 /// (`android/lineage-24/README.md`, "Display shape"). The measures are points,
 /// which are Android's density-independent pixels in both display modes.
 public struct GuestDisplayShape: Equatable, Sendable {
