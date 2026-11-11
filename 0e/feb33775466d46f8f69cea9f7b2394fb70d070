@@ -1,0 +1,37 @@
+android/lineage-24/README.md
+  s_83f5d907de3616::t_99e01b95acc312 286-289
+android/lineage-24/overlay/lineage_andarium.mk
+  s_83f5d907de3616::t_99e01b95acc312 494-497
+android/lineage-24/overlay/tools/kernarium_display_shape.sh
+  s_83f5d907de3616::t_99e01b95acc312 8-17,28,37,47-48,81,84,86
+android/lineage-24/build/build-aosp.sh
+  s_83f5d907de3616::t_99e01b95acc312 466-468
+android/lineage-24/tools/verify-target-files.py
+  s_83f5d907de3616::t_99e01b95acc312 292,817,2122-2125,2261-2266,2268-2269
+  s_83f5d907de3616::t_cac46046c076eb 2267,2270,2272,2278,2282,2285,2290-2291
+tests/tooling/android/test_builder_lane.py
+  s_83f5d907de3616::t_e7eb6ba59964c8 542,582,2014
+  s_83f5d907de3616::t_99e01b95acc312 1999-2013,3191-3193,4072-4073
+android/lineage-24/overlay/rro/KernariumCornersOverlay/AndroidManifest.xml
+  s_83f5d907de3616::t_0a4a5c4fdf7557 1-30
+android/lineage-24/overlay/rro/KernariumCornersOverlay/Android.bp
+  s_83f5d907de3616::t_0a4a5c4fdf7557 1-32
+android/lineage-24/overlay/rro/KernariumCornersOverlay/res/values/dimens.xml
+  s_83f5d907de3616::t_0a4a5c4fdf7557 1-23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0efeb33775466d46f8f69cea9f7b2394fb70d070",
+  "prompts": {},
+  "sessions": {
+    "s_83f5d907de3616": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a5ab82a9-5d39-4921-8909-98778519fb84",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
