@@ -1,0 +1,38 @@
+Andarium/Andarium/Shared/Model.swift
+  s_a16f104b1ec06c::t_9cc13e5bf357d0 232-233
+Andarium/Andarium/Shared/HomeSections.swift
+  s_a16f104b1ec06c::t_9cc13e5bf357d0 288-334
+Andarium/README.md
+  s_83f5d907de3616::t_faf373fad75bb7 131-132
+Andarium/scripts/check-app-store-bundle.py
+  s_a16f104b1ec06c::t_9cc13e5bf357d0 292
+Andarium/Andarium/Live/AppEntry.swift
+  s_a16f104b1ec06c::t_b2466b8066baed 208
+  s_a16f104b1ec06c::t_9cc13e5bf357d0 170,198-203,206-207,209
+Andarium/Andarium/Shared/HomeView.swift
+  s_a16f104b1ec06c::t_9cc13e5bf357d0 135-137
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4f2276f90e7b240f19e8f8ebc2247087d2d23a74",
+  "prompts": {},
+  "sessions": {
+    "s_83f5d907de3616": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a5ab82a9-5d39-4921-8909-98778519fb84",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    },
+    "s_a16f104b1ec06c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "af5893c4-3ef0-4641-a6c7-1c1413188116",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
