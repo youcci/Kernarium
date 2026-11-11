@@ -132,6 +132,9 @@ struct HomeView: View {
     private var guestSections: some View {
         DisplaySection()
         CapabilitiesSection()
+        #if !APP_STORE && !targetEnvironment(simulator)
+        JitSection()
+        #endif
         BackupSection()
     }
 

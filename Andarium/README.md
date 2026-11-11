@@ -128,7 +128,8 @@ everything that exists for automation or only pretends:
   (create, erase, start), the isolated guest instance, and the request a
   launch with `ANDARIUM_JIT=1` makes of StikDebug on a device, whose debugger
   gives the runtime the JIT engine's memory
-  ([executable code](../docs/architecture.md#executable-code)).
+  ([executable code](../docs/architecture.md#executable-code)), with Home's
+  Engine row, which says whether the next start has it.
 - It defines `UML_APP_STORE_APPLICATION` for the loader it compiles, which
   leaves out the display mirror, console input and the automation lookups
   ([`GuestHost/README.md`](../GuestHost/README.md)).

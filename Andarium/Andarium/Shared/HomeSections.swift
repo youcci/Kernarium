@@ -285,6 +285,53 @@ struct CapabilitiesSection: View {
     }
 }
 
+#if !APP_STORE
+/// Whether a development build has the JIT engine's memory, which a debugger
+/// gives it at launch (`AppEntry.requestJitMemory`).
+enum JitState {
+    /// The launch did not ask for it.
+    case off
+    /// StikDebug was asked and has not attached yet.
+    case waiting
+    case on
+    /// No debugger came, or it gave no memory.
+    case unavailable
+
+    var word: String {
+        switch self {
+        case .off: "Off"
+        case .waiting: "Waiting"
+        case .on: "On"
+        case .unavailable: "Unavailable"
+        }
+    }
+
+    var detail: String {
+        switch self {
+        case .off: "This launch did not ask for it"
+        case .waiting: "Waiting for StikDebug to attach"
+        case .on: "The next start runs on the JIT engine"
+        case .unavailable: "No debugger attached; the gadget engine runs"
+        }
+    }
+}
+
+/// The engine the next start runs on, in a development build on a device.
+struct JitSection: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        HomeSection(title: "Engine") {
+            OptionRow(title: "JIT", symbol: "bolt.fill", detail: model.jit.detail, dimmed: model.jit != .on) {
+                Text(model.jit.word)
+                    .foregroundStyle(.secondary)
+            }
+            .accessibilityElement(children: .combine)
+        }
+    }
+}
+#endif
+
 /// The words under Microphone while iOS refuses access.
 enum CapabilityWords {
     static let microphoneDenied = "Not allowed in Settings"

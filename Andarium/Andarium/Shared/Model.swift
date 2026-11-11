@@ -229,6 +229,8 @@ final class AppModel {
     #if !APP_STORE
     /// A launch for automation prints each reading.
     var printsStatistics = false
+    /// Whether the next start runs on the JIT engine.
+    var jit = JitState.off
     #endif
     /// Waits between readings; a test paces them by hand.
     @ObservationIgnored var statisticsSleep: @MainActor (Duration) async -> Void = { duration in

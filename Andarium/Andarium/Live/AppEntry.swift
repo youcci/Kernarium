@@ -167,7 +167,7 @@ struct AppEntry {
     func applyDeferred(to model: AppModel) async {
         let launch = overrides
         #if !targetEnvironment(simulator)
-        if launch.jit { Self.requestJitMemory() }
+        if launch.jit { Self.requestJitMemory(for: model) }
         #endif
         guard launch.start != nil || launch.erase else { return }
         if model.guest == nil {
@@ -195,11 +195,18 @@ struct AppEntry {
     /// StikDebug is not installed nothing opens, and the guest runs on the
     /// gadget engine.
     @MainActor
-    private static func requestJitMemory() {
-        guard kernarium_runtime_loader_select(LiveRuntime.androidFlavor) == 0 else { return }
+    private static func requestJitMemory(for model: AppModel) {
+        guard kernarium_runtime_loader_select(LiveRuntime.androidFlavor) == 0 else {
+            model.jit = .unavailable
+            return
+        }
+        model.jit = .waiting
         // The runtime waits on this thread, and first sees that no debugger
         // is attached yet: one that already is was not asked for here.
-        Thread.detachNewThread { _ = kernarium_runtime_loader_claim_debugger_jit_memory() }
+        Thread.detachNewThread {
+            let claimed = kernarium_runtime_loader_claim_debugger_jit_memory() != 0
+            Task { @MainActor in model.jit = claimed ? .on : .unavailable }
+        }
         var request = URLComponents()
         request.scheme = "stikdebug"
         request.host = "enable-jit"

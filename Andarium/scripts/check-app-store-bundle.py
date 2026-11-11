@@ -289,7 +289,7 @@ DEBUG_SYMBOLS = (
     ("launch harness", (b"13ConsoleReport", b"15environmentName", b"13applyDeferred",
                         b"16printsStatistics", b"13launchApplied")),
     ("debugger JIT", (b"claim_debugger_jit_memory", b"claim_from_debugger",
-                      b"16requestJitMemory")),
+                      b"16requestJitMemory", b"10JitSection", b"8JitState")),
 )
 DEBUG_STRINGS = (
     ("frame mirror", (b"uml-frame-tap",)),
