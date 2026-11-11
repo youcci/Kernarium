@@ -1,0 +1,36 @@
+Andarium/Andarium/Live/AppEntry.swift
+  s_a16f104b1ec06c::t_ce9d9bef45fa1d 168-170,192-216
+  s_a16f104b1ec06c::t_e2c28a2f79643c 217
+Andarium/Andarium/Live/LiveRuntime.swift
+  s_a16f104b1ec06c::t_ce9d9bef45fa1d 43
+GuestHost/README.md
+  s_a16f104b1ec06c::t_5e34a72e90c36c 89-91
+Andarium/README.md
+  s_a16f104b1ec06c::t_2726acd6417b91 128-131
+GuestHost/Sources/KernariumRuntimeLoader.h
+  s_a16f104b1ec06c::t_c9144d1f2184da 219-223
+Andarium/scripts/check-app-store-bundle.py
+  s_a16f104b1ec06c::t_bf7bdca91f92a1 19-20
+  s_a16f104b1ec06c::t_ce9d9bef45fa1d 291-292,303
+GuestHost/Sources/KernariumRuntimeLoader.mm
+  s_a16f104b1ec06c::t_c9144d1f2184da 31-32,302-304,686-689
+  s_a16f104b1ec06c::t_246c6ff5a0519c 690-692
+tests/tooling/andarium/test_check_app_store_bundle.py
+  s_a16f104b1ec06c::t_ce9d9bef45fa1d 62-63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3a13befd7569a8ce45d814ddc07ba76e07be83d7",
+  "prompts": {},
+  "sessions": {
+    "s_a16f104b1ec06c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "af5893c4-3ef0-4641-a6c7-1c1413188116",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
