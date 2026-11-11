@@ -1,0 +1,63 @@
+android/lineage-24/overlay/gnss/android.hardware.gnss-service.andarium.xml
+  s_83f5d907de3616::t_f05339b3d4a409 1-9
+docs/testing.md
+  s_83f5d907de3616::t_5ad0d322e63aa1 283-286
+tests/unit/andarium/location_protocol_tests.cpp
+  s_83f5d907de3616::t_5ad0d322e63aa1 1-67
+Andarium/Config/Info.plist
+  s_83f5d907de3616::t_121aafa60cb122 9-10
+Andarium/Andarium/Live/GuestLocation.swift
+  s_83f5d907de3616::t_121aafa60cb122 1-102
+android/lineage-24/README.md
+  s_83f5d907de3616::t_121aafa60cb122 85-86,174-183
+  s_83f5d907de3616::t_15cd192854944f 184
+android/lineage-24/overlay/gnss/location_protocol.hpp
+  s_83f5d907de3616::t_f05339b3d4a409 1-69
+android/lineage-24/overlay/lineage_andarium.mk
+  s_83f5d907de3616::t_cf68bb09a56e08 20-22,130-137
+android/lineage-24/tools/verify-target-files.py
+  s_83f5d907de3616::t_cf68bb09a56e08 218-220,544-545,2647-2653,4414
+tests/unit/andarium/CMakeLists.txt
+  s_83f5d907de3616::t_5ad0d322e63aa1 24-29
+Andarium/README.md
+  s_83f5d907de3616::t_121aafa60cb122 256-261
+android/lineage-24/overlay/gnss/Gnss.cpp
+  s_83f5d907de3616::t_f05339b3d4a409 1-9,11-144,147-149,153,157-184
+  s_83f5d907de3616::t_cf68bb09a56e08 10,145-146,150-152,154-156
+android/lineage-24/overlay/gnss/android.hardware.gnss-service.andarium.rc
+  s_83f5d907de3616::t_f05339b3d4a409 1-5
+android/lineage-24/overlay/gnss/Android.bp
+  s_83f5d907de3616::t_f05339b3d4a409 1-17
+android/lineage-24/build/build-aosp.sh
+  s_83f5d907de3616::t_cf68bb09a56e08 404-405
+Andarium/AndariumCore/Tests/AndariumCoreTests/GuestLocationTests.swift
+  s_83f5d907de3616::t_cae7a1ffa18660 1-33,35-44,46-91
+  s_83f5d907de3616::t_e6e5fe6f41feff 34,45
+tests/tooling/android/test_builder_lane.py
+  s_83f5d907de3616::t_cf68bb09a56e08 2247-2254,2257,2855-2861,6011
+  s_83f5d907de3616::t_fa1418e79dc1c0 763,2258-2260,2944,4274-4275
+Andarium/AndariumCore/Sources/AndariumCore/GuestLocation.swift
+  s_83f5d907de3616::t_cae7a1ffa18660 1-123
+Andarium/Andarium/Live/LiveRuntime.swift
+  s_83f5d907de3616::t_121aafa60cb122 63,546
+android/lineage-24/overlay/sepolicy/vendor/file_contexts
+  s_83f5d907de3616::t_2122a71a4b94cb 30-32
+android/lineage-24/overlay/sepolicy/vendor/hal_gnss_default.te
+  s_83f5d907de3616::t_38c69a392c14b3 1-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1211186571a9e6888f1aeb9a3fafce180120dfab",
+  "prompts": {},
+  "sessions": {
+    "s_83f5d907de3616": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a5ab82a9-5d39-4921-8909-98778519fb84",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
