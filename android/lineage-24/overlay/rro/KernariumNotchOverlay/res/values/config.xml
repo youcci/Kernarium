@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!--
+  Copyright 2026 The Android Open Source Project
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<resources>
+    <!-- A notch, the cutout of an iPhone whose top inset is below 59 dp: a
+         rectangle in the middle of the top edge, where the path's origin is.
+         It is the largest of its class, so it hides nothing on any such
+         phone. The platform takes the status bar's height from it. -->
+    <string name="config_mainBuiltInDisplayCutout" translatable="false">M -115,0 L -115,50 L 115,50 L 115,0 Z @dp</string>
+
+    <!-- SystemUI sizes the rows of the opened shade's header, the lock
+         screen's status bar and the like by this value and not by the cutout,
+         as a device with a cutout sets it. Landscape has no cutout at the top
+         and keeps the platform's height. -->
+    <dimen name="status_bar_height_portrait">50dp</dimen>
+    <dimen name="status_bar_height_landscape">28dp</dimen>
+</resources>

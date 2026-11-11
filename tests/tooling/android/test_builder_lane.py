@@ -1414,7 +1414,7 @@ def verify_target_files_fixtures(verifier: Path) -> None:
     wifi_overlay_entry = tool.WIFI_OVERLAY
     wifi_never = tool.WIFI_NEVER_DISABLED_THRESHOLD
     wifi_permanent, wifi_temporary = tool.WIFI_NO_INTERNET_THRESHOLDS
-    corners_overlay_entry = tool.CORNERS_OVERLAY
+    display_shape_overlays = tool.DISPLAY_SHAPE_OVERLAYS
     statistics_apks = tool.STATISTICS_APKS
     wifi_tracker_apks = tool.WIFI_TRACKER_APKS
     # The Setup Wizard overlay's artwork, as the build would carry it: the raw animation unchanged and
@@ -1579,7 +1579,7 @@ def verify_target_files_fixtures(verifier: Path) -> None:
         entry for entry in tool.REQUIRED_ENTRIES
         if entry.endswith(".apk") and entry not in tool.REQUIRED_PREOPT_APKS
         and entry != pinner_overlay_entry
-        and entry != corners_overlay_entry
+        and entry not in display_shape_overlays
         and entry != wifi_overlay_entry  # written with its own resources
         and entry != tool.CAMERA_APP  # written with its own resources
         and entry != tool.ICONS_APK  # written with its own manifest
@@ -2657,9 +2657,9 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                 for variant, (old, new) in {
                     "no-property": ("getprop ro.boot.kernarium.display_shape",
                                     "getprop ro.boot.other"),
-                    "no-cutout": ("android:string/config_mainBuiltInDisplayCutout",
-                                  "android:string/other"),
-                    "no-lookup": ("cmd overlay lookup", "true"),
+                    "no-cutout": ("island=android.kernarium.overlay.island",
+                                  "island=android.kernarium.overlay.other"),
+                    "no-lookup": ("cmd overlay list", "true"),
                 }.items():
                     if display_shape_variant == variant:
                         if old not in display_shape_script:
@@ -3570,22 +3570,26 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                                 compact=wifi_overlay_variant == "compact"),
                         )
                 archive.writestr(wifi_overlay_entry, wifi_overlay.getvalue())
-                # The overlay that pads content beside a rounded corner, built the same way.
-                corners_overlay = io.BytesIO()
-                with zipfile.ZipFile(corners_overlay, "w") as overlay:
-                    overlay.writestr(
-                        "AndroidManifest.xml",
-                        synthetic_compiled_manifest(
-                            29 if display_shape_variant == "corners-target-sdk-29" else 28
-                        ),
-                    )
-                    overlay.writestr(
-                        "resources.arsc",
-                        b"\x00" if display_shape_variant == "corners-no-resource"
-                        else b"\x00rounded_corner_content_padding\x00",
-                    )
-                if display_shape_variant != "missing-corners-overlay":
-                    archive.writestr(corners_overlay_entry, corners_overlay.getvalue())
+                # The overlays the display shape script enables, built the same way. The
+                # variants break the corner padding's.
+                for shape_entry, shape_resource in display_shape_overlays.items():
+                    broken = shape_entry.endswith("KernariumCornersOverlay.apk")
+                    shape_overlay = io.BytesIO()
+                    with zipfile.ZipFile(shape_overlay, "w") as overlay:
+                        overlay.writestr(
+                            "AndroidManifest.xml",
+                            synthetic_compiled_manifest(
+                                29 if broken and display_shape_variant == "corners-target-sdk-29"
+                                else 28
+                            ),
+                        )
+                        overlay.writestr(
+                            "resources.arsc",
+                            b"\x00" if broken and display_shape_variant == "corners-no-resource"
+                            else b"\x00" + shape_resource + b"\x00",
+                        )
+                    if not (broken and display_shape_variant == "missing-corners-overlay"):
+                        archive.writestr(shape_entry, shape_overlay.getvalue())
                 # The runtime resource overlay Soong generates from the product's
                 # SimpleDeviceConfig overlays. Its string pool holds each DeviceConfig list:
                 # LineageOS's, then the product's, which adds the ops of AOSP's default.
@@ -6162,7 +6166,7 @@ def verify_target_files_fixtures(verifier: Path) -> None:
             ("display-shape-started-at-boot-cause", {"display_shape_variant": "started-at-boot"},
              "starts kernarium_display_shape under 'boot'"),
             ("display-shape-no-cutout-cause", {"display_shape_variant": "no-cutout"},
-             "does not contain 'android:string/config_mainBuiltInDisplayCutout'"),
+             "does not contain 'android.kernarium.overlay.island'"),
             ("display-shape-missing-label-cause", {"display_shape_variant": "missing-label"},
              "do not label /system_ext/bin/kernarium_display_shape.sh"),
             ("display-shape-missing-overlay-find-cause",

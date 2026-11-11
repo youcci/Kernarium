@@ -332,6 +332,8 @@ REQUIRED_ENTRIES = {
     # The application that draws the launcher applications' icons for kernarium_apps (overlay/app_icons).
     "SYSTEM_EXT/app/KernariumIcons/KernariumIcons.apk",
     "VENDOR/overlay/KernariumCornersOverlay.apk",
+    "VENDOR/overlay/KernariumIslandOverlay.apk",
+    "VENDOR/overlay/KernariumNotchOverlay.apk",
     *ABI_LIST_PROPERTY_FILES,
     *MESA_ELF_ENTRIES,
     *MESA_HAL_ENTRIES,
@@ -924,22 +926,22 @@ TIME_ZONE_TRANSITION = re.compile(
     rb"kernarium_time_zone\)$",
     re.MULTILINE,
 )
-# Once boot completes a script makes what the host's screen hides of the display, which the host
-# application states at every start (ro.boot.kernarium.display_shape), the platform's display
-# cutout and corner radius, through resource overlays it fabricates as root, in a core domain of
-# its own on system_ext (overlay/tools/kernarium_display_shape.sh, overlay/sepolicy/system_ext/
-# private). A fabricated overlay does not survive a system update, so the script reads the
-# platform's state at every boot instead of keeping a record, and its domain sets no property.
+# Once boot completes a script gives the display the cutout and the corner padding of the host's
+# screen, which the host application states at every start (ro.boot.kernarium.display_shape), by
+# enabling the product's overlays that fit, in a core domain of its own on system_ext (overlay/
+# tools/kernarium_display_shape.sh, overlay/sepolicy/system_ext/private). An overlay created at
+# run time is gone at the next boot, so the cutout is a built overlay as the padding is, and the
+# script reads which are enabled from the platform. Its domain sets no property.
 DISPLAY_SHAPE_SERVICE = (
     "kernarium_display_shape", "/system_ext/bin/kernarium_display_shape.sh"
 )
 DISPLAY_SHAPE_TRIGGER = "property:sys.boot_completed=1"
 DISPLAY_SHAPE_SCRIPT_REQUIRED = (
     "ro.boot.kernarium.display_shape",
-    "cmd overlay fabricate",
-    "cmd overlay enable",
-    "cmd overlay lookup",
-    "android:string/config_mainBuiltInDisplayCutout",
+    "cmd overlay list",
+    'cmd overlay "$action"',
+    "android.kernarium.overlay.island",
+    "android.kernarium.overlay.notch",
     "android.kernarium.overlay.corners",
 )
 DISPLAY_SHAPE_TRANSITION = re.compile(
@@ -2558,10 +2560,14 @@ def check_wifi_overlay(archive: zipfile.ZipFile, infos: dict[str, zipfile.ZipInf
 PINNER_OVERLAY = "VENDOR/overlay/KernariumPinnerOverlay.apk"
 PINNER_OVERLAY_RESOURCE = b"config_pinnerHomePinBytes"
 PINNER_OVERLAY_MAX_TARGET_SDK = 28
-# The padding of content beside a rounded corner is such a resource too. The display shape
-# script enables the overlay that sets it for a guest whose display fills a phone's screen.
-CORNERS_OVERLAY = "VENDOR/overlay/KernariumCornersOverlay.apk"
-CORNERS_OVERLAY_RESOURCE = b"rounded_corner_content_padding"
+# The display cutout and the padding of content beside a rounded corner are such resources too.
+# The display shape script enables the overlays that set them for a guest whose display fills a
+# phone's screen: the cutout of a phone with an island or with a notch, and the padding.
+DISPLAY_SHAPE_OVERLAYS = {
+    "VENDOR/overlay/KernariumIslandOverlay.apk": b"config_mainBuiltInDisplayCutout",
+    "VENDOR/overlay/KernariumNotchOverlay.apk": b"config_mainBuiltInDisplayCutout",
+    "VENDOR/overlay/KernariumCornersOverlay.apk": b"rounded_corner_content_padding",
+}
 # The framework attributes android:targetSdkVersion and android:debuggable, and the types a
 # compiled manifest gives them: a number (TYPE_INT_DEC and TYPE_INT_HEX) and a literal
 # boolean (TYPE_INT_BOOLEAN, all ones for true).
@@ -2705,7 +2711,8 @@ def check_pinner_overlay(
 ) -> None:
     """The home pin and corner overlays are built for SDK 28 or lower and carry what they set."""
     check_sdk28_overlay(archive, infos, PINNER_OVERLAY, PINNER_OVERLAY_RESOURCE)
-    check_sdk28_overlay(archive, infos, CORNERS_OVERLAY, CORNERS_OVERLAY_RESOURCE)
+    for entry, resource in DISPLAY_SHAPE_OVERLAYS.items():
+        check_sdk28_overlay(archive, infos, entry, resource)
 
 
 def check_sdk28_overlay(
@@ -4901,7 +4908,7 @@ def check_display_shape_policy(system_ext_policy: bytes, system_ext_file_context
 
     for source, target, object_class, permission, why in (
         (domain, "overlay_service", b"service_manager", b"find",
-         "cmd finds the overlay service, which fabricates and enables the overlays"),
+         "cmd finds the overlay service, which lists and enables the overlays"),
         (domain, "system_server", b"binder", b"transfer",
          "cmd hands the service the receiver of its result"),
         ("system_server", domain, b"binder", b"call",

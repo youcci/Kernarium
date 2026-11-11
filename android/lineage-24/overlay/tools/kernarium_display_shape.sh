@@ -5,29 +5,26 @@
 # host application whose display fills a phone's screen states the cutout in
 # the middle of the top edge (a notch or an island) and the radius of the
 # corners at every start (ro.boot.kernarium.display_shape,
-# "<height>,<width>,<radius>" in dp). Once boot completes this script makes the
-# cutout the platform's display cutout, through a resource overlay it
-# fabricates, which only root may create, and enables the product's corner
-# overlay (rro/KernariumCornersOverlay), which pads the status bar, the shade's
-# header and the navigation bar beside a rounded corner and sizes the shade
-# header's rows. The platform takes the status bar's height from the cutout and
-# keeps the bar's content beside it.
+# "<height>,<width>,<radius>" in dp). Once boot completes this script enables
+# the product's overlays that fit (rro/): KernariumIslandOverlay or
+# KernariumNotchOverlay, which give the display its cutout and the status bar
+# its height, and KernariumCornersOverlay, which pads the status bar, the
+# shade's header and the navigation bar beside a rounded corner.
 #
-# `cmd overlay fabricate` creates strings, colours and integers but no
-# dimension, which is why the corner overlay is a built one with one value for
-# every phone rather than the screen's own measures.
-#
-# A fabricated overlay does not survive a system update, so the script keeps no
-# record of what it applied: at every boot it reads the cutout and the corner
-# overlay's state from the platform and changes only what differs. It logs one
-# line (tag kernarium_display_shape) when it changes something, and nothing here
-# can fail a boot.
+# The overlays are built ones with one value for each class of phone, not the
+# screen's own measures: an overlay created at run time holds no dimension and
+# is gone at the next boot, and a cutout that arrives after SystemUI has
+# started leaves the status bar's content where it was. An enabled overlay
+# stays enabled, so on every boot but the first the script finds nothing to
+# change. It reads the overlays' state from the platform, changes only what
+# differs, and disables them when a launch states no shape. It logs one line
+# (tag kernarium_display_shape) when it changes something, and nothing here can
+# fail a boot.
 
 tag=kernarium_display_shape
-cutout_resource=android:string/config_mainBuiltInDisplayCutout
-# Who owns an overlay fabricated through `cmd`.
-cutout_overlay=com.android.shell:KernariumDisplayCutout
-corners_overlay=android.kernarium.overlay.corners
+island=android.kernarium.overlay.island
+notch=android.kernarium.overlay.notch
+corners=android.kernarium.overlay.corners
 
 note() {
     log -t "$tag" -p i "$*"
@@ -57,42 +54,48 @@ if [ -n "$shape" ]; then
     }
 fi
 
-# The cutout the display should have: a rectangle in the middle of the top
-# edge, where the path's origin is, or none.
+# The cutout's class: an island insets the top by 59 dp or more, a notch by
+# less (the host application draws the same line, GuestDisplayShape).
 wanted_cutout=
 if [ "$height" -gt 0 ] && [ "$width" -gt 0 ]; then
-    half=$(((width + 1) / 2))
-    wanted_cutout="M -$half,0 L -$half,$height L $half,$height L $half,0 Z @dp"
+    if [ "$height" -ge 55 ]; then
+        wanted_cutout=$island
+    else
+        wanted_cutout=$notch
+    fi
 fi
 wanted_corners=
-[ "$radius" -eq 0 ] || wanted_corners=1
+[ "$radius" -eq 0 ] || wanted_corners=$corners
 
-cutout=$(cmd overlay lookup --user 0 android "$cutout_resource" 2>/dev/null)
-corners=
-case "$(cmd overlay list --user 0 2>/dev/null)" in
-    *"[x] $corners_overlay"*) corners=1 ;;
-esac
-[ "$cutout" != "$wanted_cutout" ] || [ "$corners" != "$wanted_corners" ] || exit 0
-
-done=1
-if [ "$cutout" != "$wanted_cutout" ]; then
-    if [ -n "$wanted_cutout" ]; then
-        cmd overlay fabricate --target android --name KernariumDisplayCutout \
-            "$cutout_resource" 0x03 "$wanted_cutout" >/dev/null 2>&1 &&
-            cmd overlay enable --user 0 "$cutout_overlay" >/dev/null 2>&1 || done=
+enabled=$(cmd overlay list --user 0 2>/dev/null)
+changed=
+failed=
+# set_overlay PACKAGE WANTED: enable PACKAGE when it is the wanted one, disable
+# it when it is not, and leave it when it already is as wanted.
+set_overlay() {
+    case "$enabled" in
+        *"[x] $1"*) is=1 ;;
+        *) is= ;;
+    esac
+    if [ "$1" = "$2" ]; then
+        [ -z "$is" ] || return 0
+        action=enable
     else
-        cmd overlay disable --user 0 "$cutout_overlay" >/dev/null 2>&1 || done=
+        [ -n "$is" ] || return 0
+        action=disable
     fi
-fi
-if [ "$corners" != "$wanted_corners" ]; then
-    if [ -n "$wanted_corners" ]; then
-        cmd overlay enable --user 0 "$corners_overlay" >/dev/null 2>&1 || done=
-    else
-        cmd overlay disable --user 0 "$corners_overlay" >/dev/null 2>&1 || done=
-    fi
-fi
+    changed=1
+    cmd overlay "$action" --user 0 "$1" >/dev/null 2>&1 || failed=1
+}
 
-if [ -z "$done" ]; then
+# The cutout first and the corners after it: the status bar lays its content
+# out anew on the change that follows the cutout's.
+set_overlay "$island" "$wanted_cutout"
+set_overlay "$notch" "$wanted_cutout"
+set_overlay "$corners" "$wanted_corners"
+
+[ -n "$changed" ] || exit 0
+if [ -n "$failed" ]; then
     note "the platform refused the display shape ${shape:-of a display nothing is hidden of}"
 elif [ -n "$shape" ]; then
     note "the display's cutout and corners are $shape, as the host's screen"

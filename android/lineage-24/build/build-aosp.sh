@@ -489,9 +489,14 @@ fi
 	fail "the Wi-Fi supplicant that the virtual Wi-Fi needs is absent"
 [[ "$PRODUCT_PACKAGES" == *" KernariumWifiOverlay "* ]] ||
 	fail "the Wi-Fi overlay that turns MAC randomization off is absent"
-[[ "$PRODUCT_PACKAGES" == *" kernarium_display_shape_script "* &&
-	"$PRODUCT_PACKAGES" == *" KernariumCornersOverlay "* ]] ||
-	fail "the script and overlay that apply the host screen's shape are absent"
+for package in \
+	kernarium_display_shape_script \
+	KernariumIslandOverlay \
+	KernariumNotchOverlay \
+	KernariumCornersOverlay; do
+	[[ "$PRODUCT_PACKAGES" == *" $package "* ]] ||
+		fail "the script or an overlay that applies the host screen's shape is absent: $package"
+done
 [[ "$PRODUCT_PACKAGES" == *" KernariumPinnerOverlay "* ]] ||
 	fail "the overlay that releases the home app's memory pin is absent"
 [[ "$PRODUCT_PACKAGES" == *" KernariumSms "* ]] ||

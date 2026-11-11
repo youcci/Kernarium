@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
-# After boot completes the product makes the shape of the host's screen the
-# display's cutout and corner radius (tools/kernarium_display_shape.sh):
-# `cmd overlay fabricate` and `cmd overlay enable` create and enable resource
-# overlays through the platform's overlay manager. A vendor domain may neither
+# After boot completes the product gives the display the cutout and the corner
+# padding of the host's screen (tools/kernarium_display_shape.sh): `cmd overlay
+# list`, `enable` and `disable` read and change which of the product's resource
+# overlays are enabled, through the platform's overlay manager. A vendor domain may neither
 # execute /system/bin/cmd nor be the framework's client, so the script runs in
 # a core domain defined here, as the time zone script does. The domain sets no
 # property.

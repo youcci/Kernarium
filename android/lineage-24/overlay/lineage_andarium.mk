@@ -603,9 +603,13 @@ PRODUCT_PACKAGES += KernariumIcons
 # from system_ext in a core domain of its own.
 PRODUCT_PACKAGES += kernarium_display_shape_script
 
-# The padding of content beside a rounded corner, which the display shape
-# script enables for such a guest (rro/KernariumCornersOverlay).
-PRODUCT_PACKAGES += KernariumCornersOverlay
+# The overlays the display shape script enables for such a guest: the cutout
+# of a phone with an island or with a notch, and the padding of content beside
+# a rounded corner (rro/).
+PRODUCT_PACKAGES += \
+    KernariumIslandOverlay \
+    KernariumNotchOverlay \
+    KernariumCornersOverlay
 
 # A Vulkan hardware-buffer import check: it fills gralloc buffers of several
 # formats and widths through the CPU, imports each into Vulkan and reads it
