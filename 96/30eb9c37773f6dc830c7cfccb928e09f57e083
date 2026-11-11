@@ -1,0 +1,29 @@
+android/lineage-24/overlay/lineage_andarium.mk
+  s_83f5d907de3616::t_4df2712c38e19d 741-746
+android/lineage-24/overlay/overlay-google-apps/frameworks/base/core/res/res/values/config.xml
+  s_83f5d907de3616::t_4df2712c38e19d 11-17
+android/lineage-24/overlay/config/kernarium_reported_telephony.xml
+  s_83f5d907de3616::t_4df2712c38e19d 1-8
+android/lineage-24/README.md
+  s_83f5d907de3616::t_4df2712c38e19d 101-105
+android/lineage-24/tools/verify-target-files.py
+  s_83f5d907de3616::t_4df2712c38e19d 51-52,60
+tests/tooling/android/test_builder_lane.py
+  s_83f5d907de3616::t_4df2712c38e19d 2263-2265
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9630eb9c37773f6dc830c7cfccb928e09f57e083",
+  "prompts": {},
+  "sessions": {
+    "s_83f5d907de3616": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a5ab82a9-5d39-4921-8909-98778519fb84",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
