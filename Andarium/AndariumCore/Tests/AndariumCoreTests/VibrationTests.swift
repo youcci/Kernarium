@@ -115,6 +115,38 @@ struct GuestFrameStreamTests {
         #expect(recv(second[1], &answer, 4, MSG_DONTWAIT) == 4 && answer == Array("pong".utf8))
     }
 
+    @Test func aFrameLargerThanTheBufferWaitsForAGuestThatReads() throws {
+        let first = try pair(), second = try pair()
+        defer { close(first[1]); close(second[1]) }
+        let log = Log()
+        let stream = GuestFrameStream(
+            opener: Opener([first[0], second[0]]), frameSize: 4, retryDelay: .milliseconds(10),
+            connectionChanged: { log.add($0) }, received: { _ in true })
+        stream.start()
+        defer { stream.stop() }
+        #expect(log.wait(connections: 1) == [true])
+        let large = Data((0..<1_000_000).map { UInt8(truncatingIfNeeded: $0 &* 31) })
+        // A guest that reads gets all of it within the sender's patience.
+        let guest = first[1]
+        let reader = Thread {
+            var taken = Data(), buffer = [UInt8](repeating: 0, count: 65536)
+            while taken.count < large.count {
+                let count = read(guest, &buffer, buffer.count)
+                guard count > 0 else { break }
+                taken.append(contentsOf: buffer.prefix(count))
+            }
+            log.add(taken)
+        }
+        reader.start()
+        stream.send(large, patience: 3000)
+        #expect(log.wait(frames: 1) == [large])
+        #expect(log.wait(connections: 1) == [true])
+        // Without patience, what the buffer does not take at once ends the
+        // connection.
+        stream.send(large)
+        #expect(log.wait(connections: 3) == [true, false, true])
+    }
+
     @Test func aStopClosesTheConnectionAndSendsNothingAfter() throws {
         let sockets = try pair()
         defer { close(sockets[1]) }

@@ -7,8 +7,9 @@ import Foundation
 /// port, with the lifecycle `MotionStream` has: frames of one size arrive
 /// whole and in order, a frame the receiver cannot read drops the connection,
 /// and a connection that fails or drops is tried again after `retryDelay`.
-/// Nothing is sent with a blocking write and nothing is queued (a write that
-/// would block closes the connection), and no timer runs while connected. A
+/// Nothing is queued: a write that would block closes the connection, unless
+/// the sender says how long the guest may take to read a frame it asked for.
+/// No timer runs while connected. A
 /// stop closes the connection, and a connection completing after a stop
 /// cannot revive it. The opener must bound its connect wait.
 public final class GuestFrameStream: @unchecked Sendable {
@@ -64,11 +65,27 @@ public final class GuestFrameStream: @unchecked Sendable {
     }
 
     /// Sends a frame if the guest is connected; a frame for a guest that is
-    /// not is dropped.
-    public func send(_ frame: Data) {
+    /// not is dropped. A frame larger than the connection's buffer, which the
+    /// guest asked for and reads at once, is given `patience` milliseconds to
+    /// be read. The wait holds the stream's lock, so a stop waits with it.
+    public func send(_ frame: Data, patience: Int = 0) {
         let dropped = lock.withLock { () -> UInt64? in
             guard running, descriptor >= 0 else { return nil }
-            let sent = frame.withUnsafeBytes { Darwin.send(descriptor, $0.baseAddress, $0.count, MSG_DONTWAIT) }
+            let deadline = DispatchTime.now().uptimeNanoseconds + UInt64(patience) * 1_000_000
+            var sent = 0
+            while sent < frame.count {
+                let count = frame.withUnsafeBytes {
+                    Darwin.send(descriptor, $0.baseAddress! + sent, $0.count - sent, MSG_DONTWAIT)
+                }
+                if count > 0 {
+                    sent += count
+                    continue
+                }
+                let now = DispatchTime.now().uptimeNanoseconds
+                guard count < 0, errno == EAGAIN || errno == EINTR, now < deadline else { break }
+                var writable = pollfd(fd: descriptor, events: Int16(POLLOUT), revents: 0)
+                _ = poll(&writable, 1, Int32(clamping: (deadline - now) / 1_000_000 + 1))
+            }
             guard sent != frame.count else { return nil }
             // Closing discards a partial frame and avoids queuing old frames
             // behind a stalled or paused guest.
@@ -105,7 +122,10 @@ public final class GuestFrameStream: @unchecked Sendable {
             }
             guard let opened else { return false }
             var one: Int32 = 1
-            guard setsockopt(opened, SOL_SOCKET, SO_NOSIGPIPE, &one, socklen_t(MemoryLayout.size(ofValue: one))) == 0 else {
+            // MSG_DONTWAIT alone does not keep a send to a full buffer from
+            // waiting for space.
+            guard setsockopt(opened, SOL_SOCKET, SO_NOSIGPIPE, &one, socklen_t(MemoryLayout.size(ofValue: one))) == 0,
+                  fcntl(opened, F_SETFL, fcntl(opened, F_GETFL) | O_NONBLOCK) == 0 else {
                 Darwin.close(opened)
                 return false
             }
