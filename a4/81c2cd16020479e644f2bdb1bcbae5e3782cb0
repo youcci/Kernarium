@@ -1,0 +1,19 @@
+android/lineage-24/metadata/accepted-release.env
+  s_83f5d907de3616::t_4cc68cbdc6320c 4-5,14,18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a481c2cd16020479e644f2bdb1bcbae5e3782cb0",
+  "prompts": {},
+  "sessions": {
+    "s_83f5d907de3616": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a5ab82a9-5d39-4921-8909-98778519fb84",
+        "model": "unknown"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
