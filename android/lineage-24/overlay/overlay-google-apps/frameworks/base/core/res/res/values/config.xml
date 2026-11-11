@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<resources>
+    <!-- A build with Google's applications reports Bluetooth and has none. Under this
+         restriction, which the first user is created with, the Bluetooth service never turns
+         the adapter on, at boot or for an application: without a HAL the Bluetooth process
+         would abort at every attempt. -->
+    <string-array translatable="false" name="config_defaultFirstUserRestrictions">
+        <item>no_bluetooth</item>
+    </string-array>
+</resources>

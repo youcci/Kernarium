@@ -44,6 +44,16 @@ APEX_EXT4_PAYLOADS = frozenset({"SYSTEM/apex/com.android.apex.cts.shim.apex"})
 # Play services, in a private build that carries Google's applications (LINEAGE24_GOOGLE_APPS):
 # a prebuilt whose payload is EROFS as its maker compressed it (LZ4), which the kernel reads.
 GOOGLE_APPS_APEX = "PRODUCT/apex/com.google.android.gmssystem.prodvic.apex"
+# Such a build reports Bluetooth, which it does not have, so that the Play Store shows the
+# applications that require it. The feature makes system_server start the Bluetooth service, and
+# without a HAL the Bluetooth process aborts whenever the adapter is turned on, so the first user
+# is created with the restriction under which the service never does.
+GOOGLE_APPS_FEATURE_NAMES = frozenset(
+    {"android.hardware.bluetooth", "android.hardware.bluetooth_le"}
+)
+GOOGLE_APPS_FEATURE_DECLARATIONS = frozenset(f"{name}.xml" for name in GOOGLE_APPS_FEATURE_NAMES)
+FIRST_USER_RESTRICTIONS = "config_defaultFirstUserRestrictions"
+BLUETOOTH_RESTRICTION = "no_bluetooth"
 # The Mesa Virgl GLES stack: the EGL and GLES libraries the platform loader
 # finds through ro.hardware.egl, and the gallium driver they link. The boot
 # command line's androidboot.hardware.egl must name the same suffix.
@@ -940,7 +950,7 @@ def reject_module_payload(path: PurePosixPath) -> None:
         fail(f"kernel module directory is forbidden: {path}")
 
 
-def reject_nonstatic_payload(path: PurePosixPath) -> None:
+def reject_nonstatic_payload(path: PurePosixPath, google_apps: bool) -> None:
     canonical = str(path)
     if path.parts[0] == "SYSTEM_OTHER":
         fail(f"system_other payload is forbidden: {path}")
@@ -958,7 +968,11 @@ def reject_nonstatic_payload(path: PurePosixPath) -> None:
         fail(f"Cuttlefish fstab is forbidden: {path}")
     if any(part in FORBIDDEN_APP_DIRECTORIES for part in path.parts):
         fail(f"unneeded built-in application payload is forbidden: {path}")
-    if path.name in FORBIDDEN_FEATURE_DECLARATIONS and "permissions" in path.parts:
+    if (
+        path.name in FORBIDDEN_FEATURE_DECLARATIONS
+        and "permissions" in path.parts
+        and not (google_apps and path.name in GOOGLE_APPS_FEATURE_DECLARATIONS)
+    ):
         fail(f"absent hardware feature declaration is forbidden: {path}")
 
 
@@ -2090,6 +2104,25 @@ def check_network_time(archive: zipfile.ZipFile, infos: dict[str, zipfile.ZipInf
             fail(f"{NETWORK_TIME_ORIGINS} in {FRAMEWORK_OVERLAY} lacks external: without it a device without telephony loses \"Set time automatically\"")
 
 
+def check_bluetooth_stays_off(archive: zipfile.ZipFile, infos: dict[str, zipfile.ZipInfo]) -> None:
+    """A build that reports Bluetooth creates its first user with the Bluetooth restriction."""
+    info = infos.get(FRAMEWORK_OVERLAY)
+    if info is None:
+        fail(f"{FRAMEWORK_OVERLAY} is missing")
+    try:
+        with zipfile.ZipFile(io.BytesIO(read_small(archive, info, FRAMEWORK_OVERLAY_LIMIT))) as overlay:
+            arrays = resource_arrays(overlay.read("resources.arsc"))
+    except (KeyError, OSError, ValueError, struct.error, IndexError, zipfile.BadZipFile) as error:
+        fail(f"{FRAMEWORK_OVERLAY} has no readable resource table: {error}")
+    restrictions = arrays.get(FIRST_USER_RESTRICTIONS, [])
+    if not restrictions or not all(BLUETOOTH_RESTRICTION in items for items in restrictions):
+        fail(
+            f"{FIRST_USER_RESTRICTIONS} lacks {BLUETOOTH_RESTRICTION} in {FRAMEWORK_OVERLAY}: the "
+            "build reports Bluetooth without a HAL, and the Bluetooth process would abort "
+            "whenever the adapter is turned on"
+        )
+
+
 # The power manager's FaceDownDetector turns the screen off when the device lies face down. While
 # it is enabled it holds an accelerometer connection (every 200 ms, batched over 2 s) for as long
 # as the screen is on, so the host's motion sensor stays running although no application asked for
@@ -2652,8 +2685,9 @@ def check_gnss(archive: zipfile.ZipFile, infos: dict[str, zipfile.ZipInfo]) -> N
 
 
 def check_hardware_features(
-    archive: zipfile.ZipFile, infos: dict[str, zipfile.ZipInfo]
+    archive: zipfile.ZipFile, infos: dict[str, zipfile.ZipInfo], google_apps: bool
 ) -> None:
+    reported = GOOGLE_APPS_FEATURE_NAMES if google_apps else frozenset()
     declared: set[str] = set()
     deqp_levels: list[str | None] = []
     for name, info in infos.items():
@@ -2672,7 +2706,7 @@ def check_hardware_features(
             if element.tag.rsplit("}", 1)[-1] != "feature":
                 continue
             feature = element.attrib.get("name")
-            if feature in FORBIDDEN_FEATURE_NAMES:
+            if feature in FORBIDDEN_FEATURE_NAMES - reported:
                 fail(f"absent hardware feature is advertised in {name}: {feature}")
             if feature == "android.software.vulkan.deqp.level":
                 fail(f"a Vulkan dEQP level is declared in {name}: the Vulkan lists are not qualified")
@@ -2680,7 +2714,7 @@ def check_hardware_features(
                 deqp_levels.append(element.attrib.get("version"))
             if feature:
                 declared.add(feature)
-    for feature in sorted(REQUIRED_FEATURE_NAMES - declared):
+    for feature in sorted((REQUIRED_FEATURE_NAMES | reported) - declared):
         fail(f"required feature is not declared: {feature}")
     if deqp_levels != [str(OPENGLES_DEQP_LEVEL)]:
         fail(
@@ -4378,7 +4412,7 @@ def main() -> None:
             seen.add(canonical)
             infos[canonical] = info
             reject_module_payload(path)
-            reject_nonstatic_payload(path)
+            reject_nonstatic_payload(path, google_apps)
             if info.is_dir():
                 continue
             if len(path.parts) >= 3 and path.parts[1] == "apex":
@@ -4408,7 +4442,9 @@ def main() -> None:
         if apex_count == 0:
             fail("target files do not contain an APEX payload")
         check_app_dexpreopt(seen)
-        check_hardware_features(archive, infos)
+        check_hardware_features(archive, infos, google_apps)
+        if google_apps:
+            check_bluetooth_stays_off(archive, infos)
         check_motion_sensors(archive, infos)
         check_vibrator(archive, infos)
         check_gnss(archive, infos)
