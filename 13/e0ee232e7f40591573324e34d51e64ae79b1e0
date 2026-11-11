@@ -1,0 +1,53 @@
+Andarium/README.md
+  s_83f5d907de3616::t_4732d87e63dc59 252-254
+  s_83f5d907de3616::t_88395fb0c949c4 255-256
+android/lineage-24/overlay/sensors/MotionSubHal.cpp
+  s_83f5d907de3616::t_0dbcb1da4ed576 50-63,65,69,72-74,76,97,107,119,143-145,151-153,162-168,191-192,206-213,277
+android/lineage-24/tools/verify-target-files.py
+  s_83f5d907de3616::t_4732d87e63dc59 554-555
+  s_83f5d907de3616::t_0d4e93261a507a 2632-2637,2642-2645
+android/lineage-24/overlay/lineage_andarium.mk
+  s_83f5d907de3616::t_4732d87e63dc59 123-125
+android/lineage-24/README.md
+  s_83f5d907de3616::t_4732d87e63dc59 154-158,164-165
+tests/unit/andarium/motion_protocol_tests.cpp
+  s_83f5d907de3616::t_a74426fe6ef1f8 31-46,48-49,51-57,60-64
+Andarium/AndariumCore/Tests/AndariumCoreTests/MotionDemandTests.swift
+  s_83f5d907de3616::t_7764651fb3f27b 66
+  s_83f5d907de3616::t_9552fd4356039e 34-52,153-154,161,164-165,226-236,296-324
+  s_83f5d907de3616::t_6e26ad874cc855 325
+Andarium/AndariumCore/Sources/AndariumCore/MotionSession.swift
+  s_83f5d907de3616::t_94fd05913bb2fa 7-11,15-16,26-30,144,160,176,184-185
+tests/tooling/android/test_builder_lane.py
+  s_83f5d907de3616::t_0d4e93261a507a 2235-2237,2875-2877
+  s_83f5d907de3616::t_4732d87e63dc59 764,2272,2274-2275,2981,4322-4323
+Andarium/Andarium/Live/MotionSensors.swift
+  s_83f5d907de3616::t_94fd05913bb2fa 15-18,21,31-37,62-77,85-86
+  s_83f5d907de3616::t_9552fd4356039e 91-93
+Andarium/Config/Info.plist
+  s_83f5d907de3616::t_94fd05913bb2fa 11-12
+Andarium/AndariumCore/Tests/AndariumCoreTests/MotionTests.swift
+  s_83f5d907de3616::t_9552fd4356039e 34-60
+Andarium/AndariumCore/Sources/AndariumCore/MotionStream.swift
+  s_83f5d907de3616::t_94fd05913bb2fa 7-10,14-18,29-33,35-36
+android/lineage-24/overlay/sensors/motion_protocol.hpp
+  s_83f5d907de3616::t_0dbcb1da4ed576 14-27,41,51-56,61-65,67-69
+Andarium/AndariumCore/Sources/AndariumCore/MotionControl.swift
+  s_83f5d907de3616::t_94fd05913bb2fa 6,10-14,27-28,30-33,36-37,41-50,55-57,60-78,90-91,93-96,99-100,109-119,134-136,174-176
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "13e0ee232e7f40591573324e34d51e64ae79b1e0",
+  "prompts": {},
+  "sessions": {
+    "s_83f5d907de3616": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a5ab82a9-5d39-4921-8909-98778519fb84",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
