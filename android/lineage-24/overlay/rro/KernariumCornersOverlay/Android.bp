@@ -20,9 +20,9 @@ package {
 }
 
 // The padding the status bar, the shade's header and the navigation bar keep
-// beside a rounded corner, and the status bar height SystemUI sizes the shade's
-// header by, are framework dimensions that the platform does not declare
-// overlayable, so this overlay builds against SDK 28 as the pin overlay does. It is not static: the display shape script enables it for a guest whose
+// beside a rounded corner is a framework dimension that the platform does not
+// declare overlayable, so this overlay builds against SDK 28 as the pin overlay
+// does. It is not static: the display shape script enables it for a guest whose
 // display fills a phone's screen and disables it for any other.
 runtime_resource_overlay {
     name: "KernariumCornersOverlay",
