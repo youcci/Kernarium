@@ -2254,6 +2254,12 @@ def verify_target_files_fixtures(verifier: Path) -> None:
                 # Play services, and the Bluetooth such a build reports for store filtering.
                 if google_apps_variant is not None:
                     archive.writestr("PRODUCT/apex/com.google.android.gmssystem.prodvic.apex", b"prebuilt")
+                    archive.writestr(
+                        "VENDOR/etc/permissions/android.hardware.camera.autofocus.xml",
+                        "<permissions>" + "".join(
+                            f'<feature name="android.hardware.camera{suffix}"/>'
+                            for suffix in ("", ".any", ".autofocus")
+                        ) + "</permissions>")
                     if google_apps_variant != "no-bluetooth-features":
                         for feature in ("android.hardware.bluetooth", "android.hardware.bluetooth_le"):
                             archive.writestr(f"VENDOR/etc/permissions/{feature}.xml",

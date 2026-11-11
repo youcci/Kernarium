@@ -734,6 +734,10 @@ PRODUCT_COPY_FILES_EXCLUDE := $(filter-out $(KERNARIUM_REPORTED_BLUETOOTH),$(PRO
 PRODUCT_COPY_FILES_EXCLUDE += \
     device/google/cuttlefish/shared/bluetooth/excluded_hardware.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/bluetooth_excluded_hardware.xml
 PRODUCT_COPY_FILES += $(KERNARIUM_REPORTED_BLUETOOTH)
+# The same holds for a camera, which the CAMERA permission makes an application
+# require together with autofocus. The camera service runs and lists none.
+PRODUCT_COPY_FILES += \
+    frameworks/native/data/etc/android.hardware.camera.autofocus.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.autofocus.xml
 PRODUCT_PACKAGE_OVERLAYS += device/kernarium/andarium/overlay-google-apps
 endif
 
