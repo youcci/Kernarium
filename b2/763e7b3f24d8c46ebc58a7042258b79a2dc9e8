@@ -1,0 +1,27 @@
+tests/tooling/android/test_builder_lane.py
+  s_83f5d907de3616::t_4a411dfd74b6b5 2662,3239-3243,5039,5047,6171-6173
+android/lineage-24/overlay/sepolicy/system_ext/private/kernarium_display_shape.te
+  s_83f5d907de3616::t_4a411dfd74b6b5 8-9
+android/lineage-24/overlay/tools/kernarium_display_shape.sh
+  s_83f5d907de3616::t_1d90001c147017 12-14,17-18,20-24,27,29-30,37-58,60-65,67-68,70-75,78-85,87-92,95-97,100
+android/lineage-24/tools/verify-target-files.py
+  s_83f5d907de3616::t_4a411dfd74b6b5 931-932,941,5024
+android/lineage-24/README.md
+  s_83f5d907de3616::t_4a411dfd74b6b5 1214-1216
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b2763e7b3f24d8c46ebc58a7042258b79a2dc9e8",
+  "prompts": {},
+  "sessions": {
+    "s_83f5d907de3616": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a5ab82a9-5d39-4921-8909-98778519fb84",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
