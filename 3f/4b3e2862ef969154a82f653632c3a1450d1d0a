@@ -1,0 +1,25 @@
+android/lineage-24/README.md
+  s_83f5d907de3616::t_3dbbc718a59639 1211-1212
+android/lineage-24/tools/verify-target-files.py
+  s_83f5d907de3616::t_3dbbc718a59639 944,946
+tests/tooling/android/test_builder_lane.py
+  s_83f5d907de3616::t_3dbbc718a59639 2660
+android/lineage-24/overlay/tools/kernarium_display_shape.sh
+  s_83f5d907de3616::t_3dbbc718a59639 28-31,49-52,56-57,94-98,101,105
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3f4b3e2862ef969154a82f653632c3a1450d1d0a",
+  "prompts": {},
+  "sessions": {
+    "s_83f5d907de3616": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a5ab82a9-5d39-4921-8909-98778519fb84",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
