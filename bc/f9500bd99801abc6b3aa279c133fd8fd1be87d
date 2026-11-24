@@ -1,0 +1,19 @@
+Andarium/AndariumCore/Sources/AndariumCore/GuestDisplayShape.swift
+  s_83f5d907de3616::t_72cfadfbfb9b0a 12-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "bcf9500bd99801abc6b3aa279c133fd8fd1be87d",
+  "prompts": {},
+  "sessions": {
+    "s_83f5d907de3616": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a5ab82a9-5d39-4921-8909-98778519fb84",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
