@@ -1,24 +1,35 @@
 Kernarium/Runtime/KernariumRuntime.mm
   s_83f5d907de3616::t_0922bc1e683cd7 13,1240,1244,1255,1257,1333-1339,1475-1477,2063,2067,2307,2401-2412
+  s_94edb10bdda7fb::t_170f636042a221 1243,1256,2066,2303-2306,2400
 Kernarium/Runtime/KernariumRuntime.h
   s_83f5d907de3616::t_0922bc1e683cd7 148-149,218,225-227,256-258
+  s_94edb10bdda7fb::t_2726b0316ae08c 8,216-217,219
+  s_94edb10bdda7fb::t_5dfca2063a296b 220-224
 Andarium/Andarium/Live/GuestLayer.swift
   s_83f5d907de3616::t_1ccb27d806ebf4 55-64
   s_83f5d907de3616::t_b2dee8d14677c3 65-67
+  s_94edb10bdda7fb::t_0fc8c2c4aa7eb7 21-22,44-47
 Andarium/AndariumCore/Sources/AndariumCore/SessionGestureDeferral.swift
   s_83f5d907de3616::t_8476123985e6c5 27-30
 android/lineage-24/overlay/sepolicy/system_ext/private/property_contexts
   s_83f5d907de3616::t_307eaf4f6cbf97 16,41-43
+  s_94edb10bdda7fb::t_6bd15e658fdb3b 40
 android/lineage-24/tools/verify-target-files.py
   s_83f5d907de3616::t_cec2c08c3dae1c 274-275,926-951,1642-1647,4318-4324,4938-4945,4947,4949-4954,4956-4957,4964-4965,4967-4968,4972-4973,4977-4987,4990-4995,4998-5003,5005-5006,5008-5013,5017,5020-5021,5023-5025
   s_83f5d907de3616::t_b61189c1eb1588 5431-5432
+  s_94edb10bdda7fb::t_778177f9da80f5 4851-4864
+  s_94edb10bdda7fb::t_538315eac52cad 4865-4934
 GuestHost/Sources/GuestDisplay.swift
   s_83f5d907de3616::t_66dfeae56e472f 13-16,271-274,298
+  s_94edb10bdda7fb::t_6fe2eb688198de 285-288,290,297
 tests/unit/kernarium/guest_display_shape_tests.cpp
   s_83f5d907de3616::t_0922bc1e683cd7 38,40,43,45-46
   s_83f5d907de3616::t_f2a85b31c23766 1-37,39,41-42,44,47
 Andarium/README.md
   s_83f5d907de3616::t_61b6f267c445d3 844-848
+  s_94edb10bdda7fb::t_4ac3b66236f827 832
+  s_94edb10bdda7fb::t_8f5c88f3be5363 833-835
+  s_94edb10bdda7fb::t_91f1dc64eafd30 849-850
 tests/unit/kernarium/CMakeLists.txt
   s_83f5d907de3616::t_0922bc1e683cd7 149-158
 android/lineage-24/overlay/tools/Android.bp
@@ -31,14 +42,17 @@ android/lineage-24/overlay/sepolicy/system_ext/private/kernarium_display_shape.t
   s_83f5d907de3616::t_307eaf4f6cbf97 1-35
 android/lineage-24/overlay/sepolicy/system_ext/private/file_contexts
   s_83f5d907de3616::t_307eaf4f6cbf97 10,20-21
+  s_94edb10bdda7fb::t_6bd15e658fdb3b 19
 android/lineage-24/README.md
   s_83f5d907de3616::t_61b6f267c445d3 1205-1215
 Andarium/Andarium/Live/LiveRuntime.swift
   s_83f5d907de3616::t_66dfeae56e472f 704-706,745
+  s_94edb10bdda7fb::t_da88e10bc741f2 732-733,746,793-796
 android/lineage-24/overlay/tools/kernarium_display_shape.rc
   s_83f5d907de3616::t_307eaf4f6cbf97 1-11
 tests/tooling/android/test_builder_lane.py
   s_83f5d907de3616::t_cec2c08c3dae1c 1981,2648-2677,2811-2816,2940-2945,3018-3019,3114-3135,5019-5036,6147-6160
+  s_94edb10bdda7fb::t_538315eac52cad 2817,2946
 Andarium/AndariumCore/Tests/AndariumCoreTests/GuestDisplayShapeTests.swift
   s_83f5d907de3616::t_66dfeae56e472f 1-34
 android/lineage-24/overlay/lineage_andarium.mk
@@ -47,6 +61,11 @@ Andarium/AndariumCore/Sources/AndariumCore/GuestDisplayShape.swift
   s_83f5d907de3616::t_66dfeae56e472f 1-36
 Kernarium/Runtime/KernariumGuestDisplayShape.hpp
   s_83f5d907de3616::t_f2a85b31c23766 1-41
+tests/unit/kernarium/loader_memory_pressure_tests.mm
+  s_94edb10bdda7fb::t_cc90fa22b5c04e 158
+Andarium/Andarium/Shared/Resolution.swift
+  s_94edb10bdda7fb::t_5f1d232d7c5d90 192-193,197,204
+  s_94edb10bdda7fb::t_a5940b9dc6e9a0 233-236
 ---
 {
   "schema_version": "authorship/3.0.0",
@@ -59,6 +78,14 @@ Kernarium/Runtime/KernariumGuestDisplayShape.hpp
         "tool": "claude",
         "id": "a5ab82a9-5d39-4921-8909-98778519fb84",
         "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    },
+    "s_94edb10bdda7fb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "12acc0df-7df6-4d89-98c3-16f7ef4011c7",
+        "model": "claude-opus-5-5"
       },
       "human_author": "Youcef <tools@youcef.de>"
     }
