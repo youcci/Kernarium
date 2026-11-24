@@ -1,0 +1,29 @@
+android/lineage-24/overlay/overlay-google-apps/frameworks/base/core/res/res/values/config.xml
+  s_83f5d907de3616::t_c3ddec717d5da7 1-11
+android/lineage-24/README.md
+  s_83f5d907de3616::t_c3ddec717d5da7 125-128
+tests/tooling/android/test_builder_lane.py
+  s_83f5d907de3616::t_c3ddec717d5da7 1908,3768-3770,3860-3866,4410-4425,4735-4740,6368-6372
+android/lineage-24/tools/verify-target-files.py
+  s_83f5d907de3616::t_c3ddec717d5da7 52-61,1152,1170-1174,2518-2536,7381,7411-7413
+android/lineage-24/overlay/lineage_andarium.mk
+  s_83f5d907de3616::t_c3ddec717d5da7 850-861
+android/lineage-24/overlay/overlay-google-apps/frameworks/base/packages/SettingsProvider/res/values/defaults.xml
+  s_83f5d907de3616::t_c3ddec717d5da7 1-7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "908ff3dd043364bc992b8f9575a31b77666f6e3b",
+  "prompts": {},
+  "sessions": {
+    "s_83f5d907de3616": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a5ab82a9-5d39-4921-8909-98778519fb84",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
