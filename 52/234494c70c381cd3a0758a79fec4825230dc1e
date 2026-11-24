@@ -1,0 +1,23 @@
+android/lineage-24/README.md
+  s_83f5d907de3616::t_969a3e65b20b07 1213-1214
+android/lineage-24/overlay/rro/KernariumCornersOverlay/Android.bp
+  s_83f5d907de3616::t_7cd984a15e05eb 23-25
+android/lineage-24/overlay/rro/KernariumCornersOverlay/res/values/dimens.xml
+  s_83f5d907de3616::t_2085d9ecc394a1 23-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "52234494c70c381cd3a0758a79fec4825230dc1e",
+  "prompts": {},
+  "sessions": {
+    "s_83f5d907de3616": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a5ab82a9-5d39-4921-8909-98778519fb84",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "Youcef <tools@youcef.de>"
+    }
+  }
+}
